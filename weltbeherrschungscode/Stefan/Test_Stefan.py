@@ -1,3 +1,7 @@
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
+#sys.path.append("/home/pi/git/camp2code4car/camp2code-project_phase_1/Code")
+#sys.path.append("../../camp2code-project_phase_1/Code")
 from basisklassen import *
 import traceback
 
