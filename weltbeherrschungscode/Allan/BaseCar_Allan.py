@@ -1,4 +1,5 @@
 import sys 
+import click
 
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/Code')
 from basisklassen import *
@@ -8,7 +9,7 @@ bw = Back_Wheels()
 fw = Front_Wheels()
 
 class BaseCar():
-    
+    1
     def __init__(self):
         self._steering_angle = 90
         self._speed = 0
@@ -22,8 +23,14 @@ class BaseCar():
     def direction(self, direct: int):
         return self._direction
 
-    def steering_angle(self, angle):
+    @property
+    def steering_angle(self):
         return self._steering_angle
+
+    @steering_angle.setter
+    def steering_angle(self, angle):
+        self._steering_angle = angle
+        fw.turn(angle)
 
     def stop(self):
         bw.stop()
@@ -42,15 +49,76 @@ class BaseCar():
 
 car = BaseCar()
 
-car.drive(50,1)
-time.sleep(1)
-car.drive(50,-1)
-time.sleep(1)
-car.stop()
+@click.command()
+@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
+def main(modus):
+    """Function for testing the base classes
 
-car.drive(50,1)
-time.sleep(1)
-car.steering_angle = 135
-car.drive(50,1)
-time.sleep(8)
-car.stop()
+
+    Args:
+        modus (int): The mode that can be choosen by the user
+    """
+    print('-- DEMO BASISKLASSEN--------------------')
+    modi = {
+        0: 'Abbruch',
+        1: 'Fahrpacour 1',
+        2: 'Fahrpacour 2',
+        3: 'SonicCar',
+        4: 'Fahrpacour 3',
+        5: 'Fahrpacour 4',
+    }
+
+    if modus == None:
+        print('--' * 20)
+        print('Auswahl:')
+        for m in modi.keys():
+            print('{i} - {name}'.format(i=m, name=modi[m]))
+        print('--' * 20)
+
+    while modus == None:
+        modus = input('Wähle  (Andere Taste für Abbruch): ? ')
+        if modus in ['0', '1', '2', '3', '4', '5']:
+            break
+        else:
+            modus = None
+            print('Getroffene Auswahl nicht möglich.')
+            quit()
+    modus = int(modus)
+
+    if modus == 0:
+        print('Programm wird abgebrochen')
+        
+
+    if modus == 1:
+        x = input('ACHTUNG! Das Auto wird ein Stück fahren!\n Dücken Sie ENTER zum Start.')
+        print('Abfolge Fahrparcour1')
+        if x == '':
+            car.drive(50,1)
+            time.sleep(3)
+            car.drive(50,-1)
+            time.sleep(3)
+            car.stop()
+        else:
+            print('Abruch.')
+
+    if modus == 2:
+        x = input('ACHTUNG! Das Auto wird ein Stück fahren!\n Dücken Sie ENTER zum Start.')
+        print('Abfolge Fahrparcour1')
+        if x == '':
+            car.drive(50, 1)
+            time.sleep(1)
+            car.stop()
+            time.sleep(1)
+            car.steering_angle = 135
+            car.drive(50, 1)
+            time.sleep(8)
+            car.stop()
+            car.steering_angle = 90
+        else:
+            print('Abruch.')
+
+    
+
+if __name__ == '__main__':
+    main()
+
