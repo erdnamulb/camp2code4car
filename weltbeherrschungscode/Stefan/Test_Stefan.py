@@ -1,7 +1,5 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
-#sys.path.append("/home/pi/git/camp2code4car/camp2code-project_phase_1/Code")
-#sys.path.append("../../camp2code-project_phase_1/Code")
 from basisklassen import *
 import traceback
 
@@ -10,6 +8,7 @@ bw = Back_Wheels()
 fw = Front_Wheels()
 usm = Ultrasonic()
 irm = Infrared()
+
 
 class BaseCar():
     
@@ -47,12 +46,9 @@ class BaseCar():
 
 
 
-    #def drive(dr_speed, dr_angle)
 
-
-
-@click.command()
-@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
+#@click.command()
+#@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
 def main(modus):
     """Main Function for Executing the tasks
 
@@ -60,6 +56,7 @@ def main(modus):
     Args:
         modus (int): The mode that can be choosen by the user
     """
+
     car = BaseCar()
 
     print('-- Fahrparcours --------------------')
@@ -128,31 +125,10 @@ def main(modus):
 
 if __name__ == '__main__':
     
-    main()
-
-    """
     try:
-        #Wackeln mit den Vorderrädern als Gruß
-        fw = Front_Wheels()
-        print(fw.get_angles)
-        fw.turn(45)
-        time.sleep(.5)
-        fw.turn(135)
-        time.sleep(.5)
-        fw.turn(90)
-        
-        
-        
-        bw = Back_Wheels()
-        bw.speed = 100
-        bw.forward()
-        time.sleep(2)
-        bw.backward()
-        time.sleep(2)
-        bw.stop()
-        
+        modus = sys.argv[1]
     except:
-        print('-- FEHLER --')
-        print(traceback.format_exc())
-    """
-    
+        modus = None
+
+    main(modus)
+
