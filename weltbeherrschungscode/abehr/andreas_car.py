@@ -5,3 +5,11 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'cam
 from basisklassen import *
 import traceback
 
+
+
+
+# init
+
+
+class BaseCar():
+    
