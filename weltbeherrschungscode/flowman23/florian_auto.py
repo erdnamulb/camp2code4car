@@ -1,7 +1,11 @@
 import os
 import sys
 
+# aktuellen Pfad herausfinden:
 path_to_myproject = sys.path[0]
+# mit dirname zweimal nach oben springen und dann mit join in die unterordner wechseln
+# anschliessend mit sys.path.append den zu durchsuchenden Systempfad erweitern auf diesen ordner
+# dieser wird dann auch nach dem basisklassen.py durchsucht
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(path_to_myproject)), "camp2code-project_phase_1", "Code"))
 
 from basisklassen import *
@@ -30,11 +34,16 @@ class BaseCar():
         return self._speed
         
     @property
-    def direction(self, direct: int):
+    def direction(self):
         return self._direction
 
-    def steering_angle(self, angle):
+    @property
+    def steering_angle(self):
         return self._steering_angle
+
+    @steering_angle.setter
+    def steering_angle(self, angle):
+         self._steering_angle = angle
 
     def stop(self):
         bw.stop()
@@ -43,10 +52,13 @@ class BaseCar():
         self._direction = direction
         if direction == 1: #vorwärts
             bw.forward()
+            self._direction = 1
         elif direction == -1: #rückwärts
             bw.backward()
+            self._direction = -1
         else: # alles andere = stop
             self.stop()
+            self._direction = 0
 
         self._speed = speed
         bw.speed = speed
