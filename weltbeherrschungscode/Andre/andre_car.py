@@ -22,44 +22,42 @@ ha = bk.Back_Wheels()
 
 class BaseCar:
 
-    def __init__(self) -> None:
-        self.angle = 90
-        self.direction = 0
-        self.speed = 0
+    def __init__(self):
+        self._steering_angle = 90
+        self._direction = 0
+        self._speed = 0
 
-    @property
-    def angle(self):
-        return self.get_angles()
+    def steering_angle(self):
+        return self._steering_angle()
 
     @property
     def direction(self):
-        return self.direction
+        return self._direction
 
-    @stop.setter
-    def stop(self, stop):
-        self._stop = stop
+    def stop(self):
+        ha.stop()
 
-    @speed.setter
-    def speed(self, speed):
-        self._speed = speed
+    @property
+    def speed(self):
+        return self._speed
 
-    def drive(self, speed: int, dir: int)
-        self.direction = dir
+    def drive(self, speed: int, dir: int):
+        self._direction = dir
         if dir == 1:
-            bw.forward()
-            self.direction = 1
+            ha.forward()
+            self._direction = 1
         elif dir == -1:
-            bw.backward()
-            self.direction = -1
+            ha.backward()
+            self._direction = -1
         else:
             self.stop()
-            self.direction = 0
+            self._direction = 0
         
-        self.speed = speed
-        bw.speed = speed
+        self._speed = speed
+        ha.speed = speed
 
 car = BaseCar()
-car.drive(20,1)
+car.drive(0,1)
 time.sleep(3)
 car.drive(20,-1)        
 time.sleep(3)
