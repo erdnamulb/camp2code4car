@@ -34,10 +34,10 @@ class BaseCar():
     def direction(self, direct: int):
         return self._direction
 
-    @steering_angle.setter
+
     def steering_angle(self, angle):
         self._steering_angle = angle
-        fw.turn = angle
+        fw.turn(angle)
 
     def stop(self):
         bw.stop()
@@ -113,10 +113,10 @@ def main(modus):
             print(modi[modus])
             car.drive(50,1)
             time.sleep(1)
-            car.steering_angle = 135
+            car.steering_angle(135)
             time.sleep(8)
             car.stop()
-            car.steering_angle =-135
+            car.steering_angle(45)
             time.sleep(1)
             car.drive(50,-1)
             time.sleep(8)
