@@ -1,14 +1,22 @@
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
+import os
+import sys
+
+path_to_myproject = sys.path[0]
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(path_to_myproject)), "camp2code-project_phase_1", "Code"))
+
 from basisklassen import *
-import traceback
+
+
+# print(sys.path[0])
+# path_to_myproject = os.path.abspath(__file__)
+# print(path_to_myproject)
+# print(os.path.join(os.path.dirname(os.path.dirname(path_to_myproject)), "camp2code-project_phase_1", "Code"))
 
 # ----------------- init --------------------
 bw = Back_Wheels()
 fw = Front_Wheels()
 usm = Ultrasonic()
 irm = Infrared()
-
 
 class BaseCar():
     
@@ -46,9 +54,12 @@ class BaseCar():
 
 
 
+    #def drive(dr_speed, dr_angle)
 
-#@click.command()
-#@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
+
+
+@click.command()
+@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
 def main(modus):
     """Main Function for Executing the tasks
 
@@ -56,7 +67,6 @@ def main(modus):
     Args:
         modus (int): The mode that can be choosen by the user
     """
-
     car = BaseCar()
 
     print('-- Fahrparcours --------------------')
@@ -125,10 +135,32 @@ def main(modus):
 
 if __name__ == '__main__':
     
+    main()
+
+    """
     try:
-        modus = sys.argv[1]
+        #Wackeln mit den Vorderrädern als Gruß
+        fw = Front_Wheels()
+        print(fw.get_angles)
+        fw.turn(45)
+        time.sleep(.5)
+        fw.turn(135)
+        time.sleep(.5)
+        fw.turn(90)
+        
+        
+        
+        bw = Back_Wheels()
+        bw.speed = 100
+        bw.forward()
+        time.sleep(2)
+        bw.backward()
+        time.sleep(2)
+        bw.stop()
+        
     except:
-        modus = None
-
-    main(modus)
-
+        print('-- FEHLER --')
+        print(traceback.format_exc())
+    """
+    
+1
