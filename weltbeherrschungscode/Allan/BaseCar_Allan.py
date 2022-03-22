@@ -9,7 +9,7 @@ bw = Back_Wheels()
 fw = Front_Wheels()
 
 class BaseCar():
-    1
+    
     def __init__(self):
         self._steering_angle = 90
         self._speed = 0
@@ -52,13 +52,8 @@ car = BaseCar()
 @click.command()
 @click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
 def main(modus):
-    """Function for testing the base classes
-
-
-    Args:
-        modus (int): The mode that can be choosen by the user
-    """
-    print('-- DEMO BASISKLASSEN--------------------')
+    
+    print('Abarbeitung Aufgaben')
     modi = {
         0: 'Abbruch',
         1: 'Fahrpacour 1',
