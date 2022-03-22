@@ -47,3 +47,10 @@ time.sleep(1)
 car.drive(50,-1)
 time.sleep(1)
 car.stop()
+
+car.drive(50,1)
+time.sleep(1)
+car.steering_angle = 135
+car.drive(50,1)
+time.sleep(8)
+car.stop()
