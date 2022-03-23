@@ -56,6 +56,10 @@ class BaseCar:
         self._speed = speed
         ha.speed = speed
 
+print('Programmauswahl:' /n)
+print('')
+p = input('Welches Fahrprogramm: ')
+
 car = BaseCar()
 car.drive(0,1)
 time.sleep(3)
