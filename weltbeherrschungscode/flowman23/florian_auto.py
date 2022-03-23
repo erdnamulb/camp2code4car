@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 # aktuellen Pfad herausfinden:
 path_to_myproject = sys.path[0]
@@ -44,6 +45,7 @@ class BaseCar():
     @steering_angle.setter
     def steering_angle(self, angle):
          self._steering_angle = angle
+         fw.turn(angle)
 
     def stop(self):
         bw.stop()
@@ -62,12 +64,6 @@ class BaseCar():
 
         self._speed = speed
         bw.speed = speed
-
-
-
-
- 
-
 
 
 def main(modus):
@@ -117,6 +113,15 @@ def main(modus):
 
         elif modus == 2:
             print(modi[modus])
+            car.drive(50, 1)
+            time.sleep(1)
+            car.stop()
+            time.sleep(1)
+            car.steering_angle = 135
+            car.drive(50, 1)
+            time.sleep(8)
+            car.stop()
+            car.steering_angle = 90
 
         elif modus == 3:
             print(modi[modus])
