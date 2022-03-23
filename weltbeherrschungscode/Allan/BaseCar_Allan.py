@@ -1,16 +1,18 @@
 import sys 
 import click
+import datetime as dt
 
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/Code')
+
 from basisklassen import *
-
-
-bw = Back_Wheels()
-fw = Front_Wheels()
 
 class BaseCar():
     
     def __init__(self):
+        self.bw = Back_Wheels()
+        self.fw = Front_Wheels()
+        self.usm = Ultrasonic()
+        self.irm = Infrared()
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
@@ -20,7 +22,7 @@ class BaseCar():
         return self._speed
         
     @property
-    def direction(self, direct: int):
+    def direction(self):
         return self._direction
 
     @property
@@ -30,48 +32,35 @@ class BaseCar():
     @steering_angle.setter
     def steering_angle(self, angle):
         self._steering_angle = angle
-        fw.turn(angle)
+        self.fw.turn(angle)
 
     def stop(self):
-        bw.stop()
+        self.bw.stop()
     
     def drive(self, speed: int, direction: int):
         self._direction = direction
         if direction == 1: #vorwärts
-            bw.forward()
+            self.bw.forward()
         elif direction == -1: #rückwärts
-            bw.backward()
+            self.bw.backward()
         else: # alles andere = stop
             self.stop()
 
         self._speed = speed
-        bw.speed = speed
+        self.bw.speed = speed
 
 car = BaseCar()
-
-
-usm = Ultrasonic()
-irm = Infrared()
 
 class SonicCar(BaseCar):
     def __init__(self):
         super().__init__()
+        self._distance = 0
 
-        @property
-        def distance(self):
-            return self._distance
+    @property
+    def distance(self):
+        self._distance = self.usm.distance()
+        return self._distance
 
-    def ValueInfrarot(self) -> None:
-        """Misst durchgehend Werte für Hindernisse 
-        """
-        for i in range(10):
-            distance = self.distance()
-            if distance < 0:
-                unit = 'Error'
-            else:
-                unit = 'cm'
-            print('{} : {} {}'.format(i, distance, unit))
-            time.sleep(.5)
 
 Sonic = SonicCar()
 
@@ -139,13 +128,22 @@ def main(modus):
             car.steering_angle = 90
         else:
             print('Abruch.')
-        
-    if modus == 6:
-        print('Test Ultrasonic')
-        Sonic.ValueInfrarot()
 
 
-        
+    if modus == 3:
+        x = input('ACHTUNG! Das Auto wird fahren. Dücken Sie ENTER zum Start.')
+        print('Abfolge Fahrparcour1')
+        if x == '':
+            distance = Sonic.distance
+            car.drive(40,1)
+            while distance > 7 or distance < 0:
+                distance = Sonic.distance
+                time.sleep(.1)
+            car.stop()
+            car.usm.stop
+        else:
+            print('Abruch.')
+
 
 
 if __name__ == '__main__':
