@@ -26,8 +26,24 @@ class BaseCar():
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
-        self.bw = Back_Wheels()
-        self.fw = Front_Wheels()
+
+        try:
+            with open(sys.path[0] + "/config.json", "r") as f:
+                data = json.load(f)
+                turning_offset = data["turning_offset"]
+                forward_A = data["forward_A"]
+                forward_B = data["forward_B"]
+                print("Turning Offset: ", turning_offset)
+                #print("Forward A: ", forward_A)
+                #print("Forward B: ", forward_B)
+        except:
+            print("config.json nicht gefunden")
+            turning_offset = 0
+            forward_A = 0
+            forward_B = 0
+
+        self.bw = Back_Wheels(forward_A=forward_A, forward_B=forward_B)
+        self.fw = Front_Wheels(turning_offset=turning_offset)
         self.usm = Ultrasonic()
         self.irm = Infrared()
         self.bw.stop()
