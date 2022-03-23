@@ -35,6 +35,11 @@ class BaseCar():
         return self._direction
 
 
+    @property
+    def steering_angle(self):
+        return self._steering_angle
+
+    @steering_angle.setter
     def steering_angle(self, angle):
         self._steering_angle = angle
         fw.turn(angle)
@@ -54,6 +59,16 @@ class BaseCar():
         self._speed = speed
         bw.speed = speed
 
+class SonicCar(BaseCar):
+
+    def __init__(self):
+        super().__init__()
+        self._distance = 0
+
+    @property
+    def distance(self):
+        self._distance = self.usm.distance()
+        return self._distance
 
 
 
@@ -68,7 +83,7 @@ def main(modus):
         modus (int): The mode that can be choosen by the user
     """
 
-    car = BaseCar()
+    car = SonicCar()
 
     print('-- Fahrparcours --------------------')
     modi = {
@@ -113,17 +128,30 @@ def main(modus):
             print(modi[modus])
             car.drive(50,1)
             time.sleep(1)
-            car.steering_angle(135)
+            car.steering_angle = 135
             time.sleep(8)
             car.stop()
-            car.steering_angle(45)
+            car.steering_angle = 45
             time.sleep(1)
             car.drive(50,-1)
             time.sleep(8)
             car.stop()
+            car.steering_angle = 90
 
         elif modus == 3:
             print(modi[modus])
+            
+            #Schleife mit USM Distance
+            freigabe = car.distance
+            print(freigabe)
+            while freigabe > 10 or freigabe < 0:
+                print(freigabe)
+                car.drive(50,1)
+                print("fahre vorwärts")
+                time.sleep(1)
+            print(freigabe)
+            car.stop()
+            print("Fahrt gestoppt")
 
         elif modus == 4:
             print(modi[modus])
