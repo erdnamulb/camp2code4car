@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import logging as lg
 
 # aktuellen Pfad herausfinden:
 path_to_myproject = sys.path[0]
@@ -95,10 +96,8 @@ class SonicCar(BaseCar):
         return self._distance
 
 
-def main(modus):
-    
-    car = SonicCar()
-
+def main(modus, car):
+     
     print('------ Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
@@ -153,7 +152,19 @@ def main(modus):
             car.steering_angle = 90
 
         elif modus == 3:
-            print(modi[modus])
+            distance = car.distance
+            car.drive(20,1)
+            while distance > 7 or distance < 0:
+                distance = car.distance
+                print("Abstand zum Hindernis", distance)
+                print("Geschwindigkeit:", car.speed)
+                print("Lenkwinkel:", car.steering_angle)
+                print("Fahrrichtung:", car.direction)
+                print(20*"--")
+                time.sleep(.1)
+            car.stop()
+            print("Auto angehalten")
+            car.usm.stop() # Sensor ausschalten
 
         elif modus == 4:
             print(modi[modus])
@@ -176,9 +187,11 @@ def main(modus):
     
 if __name__ == '__main__':
     
+    car = SonicCar()
     try:
         modus = sys.argv[1]
     except:
         modus = None
 
-    main(modus)
+    main(modus, car)
+    car.usm.stop()
