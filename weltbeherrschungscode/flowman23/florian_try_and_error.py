@@ -11,25 +11,19 @@ path_to_myproject = sys.path[0]
 # dieser wird dann auch nach dem basisklassen.py durchsucht
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(path_to_myproject)), "camp2code-project_phase_1", "Code"))
 
-from basisklassen import *
 
-bw = Back_Wheels()
-fw = Front_Wheels()
-usm = Ultrasonic()
-irm = Infrared()
 
-car = fa.BaseCar()
+car = fa.SonicCar()
 """car.drive(20, 1)
-time.sleep(3)
-car.stop()"""
-
-"""car.drive(50, 1)
 time.sleep(1)
 car.stop()
-time.sleep(1)
 car.steering_angle = 135
-car.drive(50, 1)
-time.sleep(8)
-car.stop()"""
+time.sleep(1)
+car.steering_angle = 45
+time.sleep(1)
 car.steering_angle = 90
-print(fw.get_angles())
+car.stop()"""
+
+print(car.distance)
+
+
