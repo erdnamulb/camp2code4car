@@ -17,8 +17,10 @@ import basisklassen as bk
 # getter: steering_angle, speed, direction
 # setter: drive(int,int), stop()
 
-va = bk.Front_Wheels()
-ha = bk.Back_Wheels()
+#fw = bk.Front_Wheels()
+#bw = bk.Back_Wheels()
+#usm = bk.Ultrasonic()
+#irm = bk.Infrared()
 
 class BaseCar:
 
@@ -26,6 +28,10 @@ class BaseCar:
         self._steering_angle = 90
         self._direction = 0
         self._speed = 0
+        self.fw = bk.Front_Wheels(turning_offset = 5)
+        self.bw = bk.Back_Wheels()
+        self.usm = bk.Ultrasonic()
+        self.irm = bk.Infrared()
 
     @property
     def steering_angle(self):
@@ -40,32 +46,45 @@ class BaseCar:
         return self._speed
 
     def stop(self):
-        ha.stop()
+        self.bw.stop()
 
     @steering_angle.setter
     def steering_angle(self, angle):
         self._steering_angle = angle
-        va.turn(angle)
+        self.fw.turn(angle)
 
     def drive(self, speed: int, dir: int):
         self._direction = dir
         if dir == 1:
-            ha.forward()
+            self.bw.forward()
             self._direction = 1
         elif dir == -1:
-            ha.backward()
+            self.bw.backward()
             self._direction = -1
         else:
             self.stop()
             self._direction = 0
         
         self._speed = speed
-        ha.speed = speed
+        self.bw.speed = speed
 
-car = BaseCar()
+
+class SonicCar(BaseCar):
+
+    def __init__(self):
+        super().__init__()
+        self._distance = 0
+    
+    @property
+    def distance(self):
+        self._distance = usm.distance()
+        return self._distance
+    
 
 def parc1():
     print("Fahrparcours 1 - Vorwärts und Rückwärts")
+    car = BaseCar()
+    car.steering_angle = 80
     car.drive(30,1)
     time.sleep(3)
     car.stop()
@@ -76,6 +95,7 @@ def parc1():
 
 def parc2():
     print("Fahrparcours 2 - Kreisfahrt mit maximalem Lenkwinkel")
+    car = BaseCar()
     car.steering_angle = 90
     car.drive(30,1)
     time.sleep(1)
@@ -103,6 +123,14 @@ def parc2():
 
 def parc3(): 
     print("Fahrparcours 3 - Vorwärtsfahrt bis Hindernis")
+    car = SonicCar()
+    print('erste Abstandsmessung: {}cm'.format(car.distance))
+    if car.distance > 3:
+        speed = 30
+        dir = 1
+        car.drive(speed, dir)
+        time.sleep(0.5)
+
 
 def parc4(): 
     print("Fahrparcours 4 - Erkundungstour mit Hindernis")
