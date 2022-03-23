@@ -75,8 +75,21 @@ def add_usm(name, value):
     db.commit()
     db.close()
 
+def add_steering(name, value):
+    '''Hinzufügen von Werten aus Steering 
+        mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    db = create_connection(name)
+    db.execute("""
+        INSERT INTO steering 
+            (timestamp, angle)
+        VALUES 
+            (?,?);""",(time, value))
+    db.commit()
+    db.close()
+
 def add_driving(name, speed, direction):
-    '''Hinzufügen von Werten aus Ultraschallsensor 
+    '''Hinzufügen von Werten aus Driving 
         mit Zeitstempel zum Zeitpunkt des Schreibens'''
     time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
@@ -88,6 +101,21 @@ def add_driving(name, speed, direction):
     db.commit()
     db.close()
 
+def add_infrared(name, value):
+    '''Hinzufügen von Werten aus Infrared 
+        mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    db = create_connection(name)
+    db.execute("""
+        INSERT INTO infrared 
+            (timestamp, value)
+        VALUES 
+            (?,?);""",(time, value))
+    db.commit()
+    db.close()
+
+
+
 def read_usm(name):
     db = create_connection(name)
     cur = db.cursor()
@@ -97,6 +125,32 @@ def read_usm(name):
         print(row)
     db.close()
     
+def read_steering(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM steering")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
+
+def read_driving(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM driving")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()    
+
+def read_infrared(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM infrared")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()  
     
 '''
 
