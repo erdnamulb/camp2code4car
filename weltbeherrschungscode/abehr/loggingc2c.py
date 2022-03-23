@@ -65,22 +65,21 @@ def makedatabase(name: str):
 def add_usm(name, value):
     '''Hinzufügen von Werten aus Ultraschallsensor 
         mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
-    cursor = db.Cursor()
-    time = dt.datetime.timestamp(dt.datetime.now())
     db.execute("""
         INSERT INTO ultrasonic 
             (timestamp, distance)
         VALUES 
-            (time, value)""")
+            (time, value);""")
     db.commit()
     db.close()
 
 
-def read_usm(name, series)
+def read_usm(name):
     db = create_connection(name)
-    cursor = db.Cursor()
-    cursor.execute("SELECT * FROM ultrasonic")
+    cur = db.cursor()
+    cur.execute("SELECT * FROM ultrasonic")
     rows = cur.fetchall()
     for row in rows:
         print(row)
