@@ -11,34 +11,45 @@ irm = Infrared()
 
 
 class BaseCar():
-    
+
     def __init__(self):
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
-        
+        bw.stop()
+        #fw.turn(self._steering_angle)
+
     @property
     def speed(self):
         return self._speed
-        
+
     @property
-    def direction(self, direct: int):
+    def direction(self):
         return self._direction
 
-    def steering_angle(self, angle):
+    @property
+    def steering_angle(self):
         return self._steering_angle
+
+    @steering_angle.setter
+    def steering_angle(self, angle):
+        self._steering_angle = angle
+        fw.turn(angle)
 
     def stop(self):
         bw.stop()
-    
+
     def drive(self, speed: int, direction: int):
         self._direction = direction
         if direction == 1: #vorwärts
+            self._direction = 1
             bw.forward()
         elif direction == -1: #rückwärts
             bw.backward()
+            self._direction = -1
         else: # alles andere = stop
             self.stop()
+            self._direction = 0
 
         self._speed = speed
         bw.speed = speed
@@ -81,7 +92,7 @@ def main(modus):
     while True:
 
         while modus == None:
-            modus = input('Wähle  (Andere Taste für Abbruch): ? ')
+            modus = input("Wähle  (Abbruch mit '0'): ? ")
             if modus in ['1', '2', '3', '4', '5', '6', '7', '0']:
                 break
             else:
@@ -92,14 +103,45 @@ def main(modus):
 
         if modus == 1:
             print(modi[modus])
-            car.drive(50,1)
+            car.steering_angle = 90
+            print("vorwärts")
+            car.drive(30,1)
+            time.sleep(3)
+            print("stopp")
+            car.stop()
             time.sleep(1)
-            car.drive(50,-1)
-            time.sleep(1)
+            print("rückwärts")
+            car.drive(30,-1)
+            time.sleep(3)
+            print("stopp")
             car.stop()
 
         elif modus == 2:
             print(modi[modus])
+            car.steering_angle = 90
+            print("vorwärts")
+            car.drive(40,1)
+            time.sleep(1)
+            car.stop()
+            time.sleep(.5)
+            print("Uhrzeigersinn")
+            car.steering_angle = 135
+            time.sleep(.3)
+            car.drive(40,1)
+            time.sleep(8)
+            car.stop()
+            print("Zurück")
+            car.steering_angle = 135
+            car.drive(40,-1)
+            time.sleep(8)
+            car.stop()
+            time.sleep(.5)
+            print("Rückwärts")
+            car.steering_angle = 90
+            car.drive(30,-1)
+            time.sleep(1)
+            car.stop()
+            
 
         elif modus == 3:
             print(modi[modus])

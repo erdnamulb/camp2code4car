@@ -49,6 +49,18 @@ class BaseCar():
 
 car = BaseCar()
 
+
+usm = Ultrasonic()
+irm = Infrared()
+
+class SonicCar():
+    def __init__(self):
+        super().__init__()
+
+
+
+
+
 @click.command()
 @click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
 def main(modus):
