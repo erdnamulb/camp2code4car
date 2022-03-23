@@ -1,6 +1,22 @@
 import sqlite3
 import datetime as dt
 
+
+def create_connection(db_file):
+    """ create a database connection to the SQLite database
+        specified by the db_file
+    :param db_file: database file
+    :return: Connection object or None
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+    except Error as e:
+        print(e)
+
+    return conn
+
+
 def makedatabase(name: str):
     '''Anlegen einer Datenbank mit den Tabellen
         ultrasonic
@@ -8,26 +24,26 @@ def makedatabase(name: str):
         driving
         steering'''
     try:
-        db = sqlite3.connect(str+'.db')
+        db = sqlite3.connect(name)
 
         db.execute("""
             CREATE TABLE ultrasonic (
                 id INTEGER
-                , timestamp INTEGER
+                , timestamp VARCHAR(20)
                 , distance INTEGER
                 , PRIMARY KEY(id))""")
 
         db.execute("""
             CREATE TABLE infrared (
                 id INTEGER
-                , timestamp INTEGER
+                , timestamp VARCHAR(20)
                 , value INTEGER
                 , PRIMARY KEY(id))""")
 
         db.execute("""
             CREATE TABLE driving (
                 id INTEGER
-                , timestamp INTEGER
+                , timestamp VARCHAR(20)
                 , speed INTEGER
                 , direction INTEGER
                 , PRIMARY KEY(id))""")
@@ -35,7 +51,7 @@ def makedatabase(name: str):
         db.execute("""
             CREATE TABLE steering (
                 id INTEGER
-                , timestamp INTEGER
+                , timestamp VARCHAR(20)
                 , angle INTEGER
                 , PRIMARY KEY(id))""")            
         
@@ -45,21 +61,37 @@ def makedatabase(name: str):
     except:
         print('Datenbank existiert schon.')
 
-db = sqlite3.connect('drivedata.db')
-cursor = db.Cursor()
 
-def add_usm(time, value):
+def add_usm(name, value):
+    '''Hinzufügen von Werten aus Ultraschallsensor 
+        mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    db = create_connection(name)
+    cursor = db.Cursor()
+    time = dt.datetime.timestamp(dt.datetime.now())
     db.execute("""
         INSERT INTO ultrasonic 
             (timestamp, distance)
         VALUES 
-            (time, value)"""
+            (time, value)""")
     db.commit()
+    db.close()
+
+
+def read_usm(name, series)
+    db = create_connection(name)
+    cursor = db.Cursor()
+    cursor.execute("SELECT * FROM ultrasonic")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
+    
+    
+'''
 
 #db.execute(newentry_usm, (time, value))
-
-db.commit()
-print("Eintragung fertig")
+#db = sqlite3.connect('drivedata.db')
+#cursor = db.Cursor()
 
 print("Verifikation:")
 abfrage = db.execute("""
@@ -67,12 +99,4 @@ abfrage = db.execute("""
     FROM ultrasonic """)
 for eintrag in abfrage:
     print(eintrag)
-
-
-read_usm = "SELECT timestamp, value FROM ultrasonic"
-cursor.execute(read_usm)
-cursor = db.fetchall()
-
-
-
-db.close()
+'''
