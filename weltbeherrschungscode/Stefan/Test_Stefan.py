@@ -1,6 +1,8 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *
+import loggingc2c as log
+
 import traceback
 
 
@@ -72,7 +74,15 @@ class BaseCar():
         now = 0
         while now < waitTime:
             self.steering_angle = angle
-            time.sleep(.5)
+            time.sleep(.25)
+            
+            if angle > 90:
+                offset = -5
+            else:
+                offset = 5
+            self.steering_angle = angle + offset
+            time.sleep(.25)
+
             now += .5
             print(f"time= {now:.1f} set_angle = {angle}")
 
@@ -88,14 +98,13 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
-class Fahrdaten():
-
-    def __init__(self) -> None:
-        self.speed = 0
+def avoid_crash(car):
+    car.stop()
+    car.s
 
 #@click.command()
 #@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
-def main(modus):
+def main(modus, car):
     """Main Function for Executing the tasks
 
 
@@ -103,7 +112,7 @@ def main(modus):
         modus (int): The mode that can be choosen by the user
     """
 
-    car = SonicCar()
+    
 
     print('------ Fahrparcours --------------------')
     modi = {
@@ -160,18 +169,18 @@ def main(modus):
             car.stop()
             time.sleep(.5)
             print("Uhrzeigersinn")
-            car.steering_angle = 45
+            car.steering_angle = 135
             time.sleep(.3)
-            #car.drive(40,1)
-            car.wait_angle(10, 45)
+            car.drive(40,1)
+            car.wait_angle(10, 135)
             car.stop()
-            #car.steering_angle = 90
+            car.steering_angle = 90
             time.sleep(1)
             print("Zurück")
-            car.steering_angle = 45
+            car.steering_angle = 135
             time.sleep(.3)
-            #car.drive(40,-1)
-            car.wait_angle(10, 45)
+            car.drive(40,-1)
+            car.wait_angle(10, 135)
             car.stop()
             time.sleep(.5)
             print("Rückwärts")
@@ -188,7 +197,7 @@ def main(modus):
             while distance > 7 or distance < 0:
                 distance = car.distance
                 print(distance)
-                time.sleep(.5)
+                time.sleep(.1)
             car.stop()
 
         elif modus == 4:
@@ -204,7 +213,18 @@ def main(modus):
             print(modi[modus])
 
         elif modus == 8:
-            print(modi[modus])
+            #print(modi[modus])
+            run_loop = True
+            while run_loop:
+                for a in range(45, 136, 5):
+                    time.sleep(.1)
+                    car.steering_angle = a
+                    print(f"angle : {car.steering_angle}")
+                for a in range(135, 44, -5):
+                    time.sleep(.1)
+                    car.steering_angle = a
+                    print(f"angle : {car.steering_angle}")
+                run_loop = True
         
         elif modus == 0:
             print("Ende")
@@ -215,10 +235,14 @@ def main(modus):
 
 if __name__ == '__main__':
     
+    car = SonicCar()
+    log.makedatabase(f"{sys.path[0]}/logdata.db")
+
     try:
         modus = sys.argv[1]
     except:
         modus = None
 
-    main(modus)
+    main(modus, car)
+    car.stop()
 
