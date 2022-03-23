@@ -2,7 +2,9 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *
 import traceback
+import loggingc2c as log
 
+db_path = f"{sys.path[0]}/andreasdb.sqlite"
 
 class BaseCar():
 
@@ -159,9 +161,18 @@ def main(modus):
 
         elif modus == 3:
             print(modi[modus])
-            
+            distance = car.distance
+            car.drive(40,1)
+            while distance > 7 or distance < 0:
+                distance = car.distance
+                log.add_driving(db_path, car.speed, car.direction)
+                log.add_usm(db_path,distance)
+                print(distance)
+                time.sleep(.1)
+            car.stop()
+            log.add_driving(db_path, car.speed, car.direction)
             #Schleife mit USM Distance
-            freigabe = car.distance
+            """freigabe = car.distance
             print(freigabe)
             while freigabe > 10 or freigabe < 0:
                 print(freigabe)
@@ -170,7 +181,9 @@ def main(modus):
                 time.sleep(1)
             print(freigabe)
             car.stop()
-            print("Fahrt gestoppt")
+            print("Fahrt gestoppt")"""
+            
+            
 
         elif modus == 4:
             print(modi[modus])
