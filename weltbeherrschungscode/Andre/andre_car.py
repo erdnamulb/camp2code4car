@@ -69,6 +69,7 @@ class BaseCar:
         self.bw.speed = speed
 
 
+
 class SonicCar(BaseCar):
 
     def __init__(self):
@@ -130,6 +131,8 @@ def parc3():
         dir = 1
         car.drive(speed, dir)
         time.sleep(0.5)
+    else:
+        car.stop()
 
 
 def parc4(): 
