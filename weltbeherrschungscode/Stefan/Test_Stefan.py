@@ -10,8 +10,25 @@ class BaseCar():
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
-        self.bw = Back_Wheels()
-        self.fw = Front_Wheels()
+        
+        try:
+            path= os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code')
+            with open(path +"/config.json", "r") as f:
+                data = json.load(f)
+                turning_offset = data["turning_offset"]
+                forward_A = data["forward_A"]
+                forward_B = data["forward_B"]
+                print("Turning Offset: ", turning_offset)
+                print("Forward A: ", forward_A)
+                print("Forward B: ", forward_B)
+        except:
+            print("config.json nicht gefunden")
+            turning_offset = 0
+            forward_A = 0
+            forward_B = 0
+
+        self.bw = Back_Wheels(forward_A=forward_A, forward_B=forward_B)
+        self.fw = Front_Wheels(turning_offset=turning_offset)
         self.usm = Ultrasonic()
         self.irm = Infrared()
         self.bw.stop()
@@ -88,7 +105,7 @@ def main(modus):
 
     car = SonicCar()
 
-    print('-- Fahrparcours --------------------')
+    print('------ Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
         2: 'Fahrparcours 2 - Kreisfahrt mit max. Lenkwinkel',
@@ -101,7 +118,6 @@ def main(modus):
     }
 
     if modus == None:
-        print('--' * 20)
         print('Auswahl:')
         for m in modi.keys():
             print('{i} - {name}'.format(i=m, name=modi[m]))
@@ -111,7 +127,7 @@ def main(modus):
 
         while modus == None:
             modus = input("Wähle  (Abbruch mit '0'): ? ")
-            if modus in ['1', '2', '3', '4', '5', '6', '7', '0']:
+            if modus in ['1', '2', '3', '4', '5', '6', '7', '8', '0']:
                 break
             else:
                 modus = None
@@ -144,18 +160,18 @@ def main(modus):
             car.stop()
             time.sleep(.5)
             print("Uhrzeigersinn")
-            car.steering_angle = 135
+            car.steering_angle = 45
             time.sleep(.3)
             #car.drive(40,1)
-            car.wait_angle(10, 135)
+            car.wait_angle(10, 45)
             car.stop()
             #car.steering_angle = 90
             time.sleep(1)
             print("Zurück")
-            car.steering_angle = 135
+            car.steering_angle = 45
             time.sleep(.3)
             #car.drive(40,-1)
-            car.wait_angle(10, 135)
+            car.wait_angle(10, 45)
             car.stop()
             time.sleep(.5)
             print("Rückwärts")
@@ -185,6 +201,9 @@ def main(modus):
             print(modi[modus])
         
         elif modus == 7:
+            print(modi[modus])
+
+        elif modus == 8:
             print(modi[modus])
         
         elif modus == 0:
