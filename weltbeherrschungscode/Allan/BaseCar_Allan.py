@@ -71,6 +71,16 @@ class SonicCar(BaseCar):
 
 Sonic = SonicCar()
 
+def hindernisumfahren():
+    car.steering_angle = -135
+    car.drive(40, -1)
+    time.sleep(3)
+    car.stop()
+    car.steering_angle = 90
+    car.drive(40, 1)
+
+    
+
 
 @click.command()
 @click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
@@ -156,6 +166,47 @@ def main(modus):
             car.usm.stop
         else:
             print('Abruch.')
+
+    if modus == 4:
+        x = input('ACHTUNG! Das Auto wird fahren. Dücken Sie ENTER zum Start.')
+        print('Fahrparcour 3')
+        if x == '':
+            distance = Sonic.distance
+            car.drive(40,1)
+            while distance > 7 or distance < 0:
+                distance = Sonic.distance
+                time.sleep(.1)
+                print("Entferneung zum nächsten Hindernis:", distance,"cm")
+                db.add_usm(pfad_db, distance)
+                print("Aktuelle Geschwindigkeit:", car.speed,"cm/sek")
+                db.add_driving(pfad_db, car.speed, car.direction)
+                print("Aktueller Lenkeinschlag:", car.steering_angle)
+                db.add_steering(pfad_db, car.steering_angle)
+            car.stop()
+            car.usm.stop
+        else:
+            print('Abruch.')  
+
+    if modus == 5:
+        x = input('ACHTUNG! Das Auto wird fahren. Dücken Sie ENTER zum Start.')
+        print('Fahrparcour 4')
+        if x == '':
+            distance = Sonic.distance
+            car.drive(40,1)
+            while distance > 7 or distance < 0:
+                distance = Sonic.distance
+                time.sleep(.1)
+                print("Entferneung zum nächsten Hindernis:", distance,"cm")
+                db.add_usm(pfad_db, distance)
+                print("Aktuelle Geschwindigkeit:", car.speed,"cm/sek")
+                db.add_driving(pfad_db, car.speed, car.direction)
+                print("Aktueller Lenkeinschlag:", car.steering_angle)
+                db.add_steering(pfad_db, car.steering_angle)
+            car.stop()
+            hindernisumfahren()
+            car.usm.stop
+        else:
+            print('Abruch.') 
 
 
 
