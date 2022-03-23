@@ -77,7 +77,7 @@ def add_usm(name, value):
     db.close()
 
 
-def read_usm(name, series)
+def read_usm(name, series):
     db = create_connection(name)
     cursor = db.Cursor()
     cursor.execute("SELECT * FROM ultrasonic")
