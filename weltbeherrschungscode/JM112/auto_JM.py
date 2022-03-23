@@ -1,5 +1,6 @@
 import sys
 import os
+import loggingc2c as log
 
 
 #Pfad für den Import der basisklassen
@@ -103,6 +104,9 @@ def main(modus):
     car = BaseCar()
     scar = SonicCar()
 
+    db_w_path = f"{sys.path[0]}/JM.sqlite"
+    log.makedatabase(db_w_path)
+
     print('-- Auswahl Fahrparcours --------------------')
     modi = {
         0: 'Frei',
@@ -177,7 +181,14 @@ def main(modus):
         scar.drive(50, 1)
         while True:
             if scar.distance >= 7 or scar.distance < 0:
-                print(scar.distance)
+                print("Abstand zum Hindernis", scar.distance) #umschreiben
+                log.add_usm(db_w_path, scar.distance)
+                print("Geschwindigkeit:", scar.speed)
+                print("Fahrrichtung:", scar.direction)
+                log.add_driving(db_w_path, scar.speed, scar.direction)
+                print("Lenkwinkel:", scar.steering_angle)
+                log.add_steering(db_w_path, scar.steering_angle)
+                print(20*"--")
                 time.sleep(0.5)
             else:
                 scar.stop()
