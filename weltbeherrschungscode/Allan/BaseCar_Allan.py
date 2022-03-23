@@ -49,6 +49,33 @@ class BaseCar():
 
 car = BaseCar()
 
+
+usm = Ultrasonic()
+irm = Infrared()
+
+class SonicCar(BaseCar):
+    def __init__(self):
+        super().__init__()
+
+        @property
+        def distance(self):
+            return self._distance
+
+    def ValueInfrarot(self) -> None:
+        """Misst durchgehend Werte für Hindernisse 
+        """
+        for i in range(10):
+            distance = self.distance()
+            if distance < 0:
+                unit = 'Error'
+            else:
+                unit = 'cm'
+            print('{} : {} {}'.format(i, distance, unit))
+            time.sleep(.5)
+
+Sonic = SonicCar()
+
+
 @click.command()
 @click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
 def main(modus):
@@ -61,6 +88,7 @@ def main(modus):
         3: 'SonicCar',
         4: 'Fahrpacour 3',
         5: 'Fahrpacour 4',
+        6: 'Befehle testen'
     }
 
     if modus == None:
@@ -72,7 +100,7 @@ def main(modus):
 
     while modus == None:
         modus = input('Wähle  (Andere Taste für Abbruch): ? ')
-        if modus in ['0', '1', '2', '3', '4', '5']:
+        if modus in ['0', '1', '2', '3', '4', '5', '6']:
             break
         else:
             modus = None
@@ -111,8 +139,14 @@ def main(modus):
             car.steering_angle = 90
         else:
             print('Abruch.')
+        
+    if modus == 6:
+        print('Test Ultrasonic')
+        Sonic.ValueInfrarot()
 
-    
+
+        
+
 
 if __name__ == '__main__':
     main()
