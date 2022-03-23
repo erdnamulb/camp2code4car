@@ -1,18 +1,15 @@
 import os
 import sys
 import time
-# from ../../camp2code-project_phase_1/Code/basisklassen import *
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
-from basisklassen import *
-#import traceback
+
+import andreas_car_0_1 as ab
+import loggingc2c as log
+
+car = ab.SonicCar()
 
 
+db_path = f"{sys.path[0]}/andreasdb.sqlite"
 
-
-# ----------------- init --------------------
-bw = Back_Wheels()
-fw = Front_Wheels()
-usm = Ultrasonic()
-irm = Infrared()
-
-print(usm.distance())
+log.makedatabase(db_path)
+log.add_usm(db_path,car.distance)
+log.read_usm(db_path)
