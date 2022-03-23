@@ -11,6 +11,7 @@ def create_connection(db_file):
     conn = None
     try:
         conn = sqlite3.connect(db_file)
+        print("connection success")
     except Error as e:
         print(e)
 
@@ -65,27 +66,106 @@ def makedatabase(name: str):
 def add_usm(name, value):
     '''Hinzufügen von Werten aus Ultraschallsensor 
         mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
-    cursor = db.Cursor()
-    time = dt.datetime.timestamp(dt.datetime.now())
     db.execute("""
         INSERT INTO ultrasonic 
             (timestamp, distance)
         VALUES 
-            (time, value)""")
+            (?, ?);""",(time, value))
     db.commit()
     db.close()
 
 
-def read_usm(name, series):
+def add_driving(name, value1, value2):
+    '''Hinzufügen von Geschwindigkeitswerten 
+        mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
-    cursor = db.Cursor()
-    cursor.execute("SELECT * FROM ultrasonic")
+    db.execute("""
+        INSERT INTO driving 
+            (timestamp, speed, direction)
+        VALUES 
+            (?, ?, ?);""",(time, value1, value2))
+    db.commit()
+    db.close()
+
+
+def add_steering(name, value):
+    '''Hinzufügen von Werten aus Ultraschallsensor 
+        mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    db = create_connection(name)
+    db.execute("""
+        INSERT INTO steering 
+            (timestamp, angle)
+        VALUES 
+            (?, ?);""",(time, value))
+    db.commit()
+    db.close()
+
+
+def read_steering(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM steering")
     rows = cur.fetchall()
     for row in rows:
         print(row)
     db.close()
-    
+
+
+def read_driving(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM driving")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
+
+
+def read_usm(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM ultrasonic")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
+
+
+def read_infrared(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM infrared")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
+
+
+
+def read_all(name):
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM ultrasonic")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+        cur.execute("SELECT * FROM driving")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+        cur.execute("SELECT * FROM steering")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+        cur.execute("SELECT * FROM infrared")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
     
 '''
 

@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-import logging as lg
+import loggingc2c as log
 
 # aktuellen Pfad herausfinden:
 path_to_myproject = sys.path[0]
@@ -97,7 +97,9 @@ class SonicCar(BaseCar):
 
 
 def main(modus, car):
-     
+    db_w_path = f"{sys.path[0]}/flodb.sqlite"
+    log.makedatabase(db_w_path)
+
     print('------ Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
@@ -157,9 +159,12 @@ def main(modus, car):
             while distance > 7 or distance < 0:
                 distance = car.distance
                 print("Abstand zum Hindernis", distance)
+                log.add_usm(db_w_path, distance)
                 print("Geschwindigkeit:", car.speed)
-                print("Lenkwinkel:", car.steering_angle)
                 print("Fahrrichtung:", car.direction)
+                log.add_driving(db_w_path, car.speed, car.direction)
+                print("Lenkwinkel:", car.steering_angle)
+                log.add_steering(db_w_path, car.steering_angle)
                 print(20*"--")
                 time.sleep(.1)
             car.stop()
