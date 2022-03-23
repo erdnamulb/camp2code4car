@@ -1,10 +1,17 @@
-import sys 
+import sys
+from turtle import speed 
 import click
 import datetime as dt
+import os
 
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/Code')
-
 from basisklassen import *
+sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/weltbeherrschungscode/Allan')
+import loggingc2c as db 
+
+
+db.makedatabase(f"{sys.path[0]}/AllanDB.db")
+pfad_db = f"{sys.path[0]}/AllanDB.db"
 
 class BaseCar():
     
@@ -132,13 +139,19 @@ def main(modus):
 
     if modus == 3:
         x = input('ACHTUNG! Das Auto wird fahren. Dücken Sie ENTER zum Start.')
-        print('Abfolge Fahrparcour1')
+        print('Test SonyCar')
         if x == '':
             distance = Sonic.distance
             car.drive(40,1)
             while distance > 7 or distance < 0:
                 distance = Sonic.distance
                 time.sleep(.1)
+                print(distance)
+                db.add_usm(pfad_db, distance)
+                print(car.speed)
+                db.add_driving(pfad_db, car.speed, car.direction)
+                print(car.steering_angle)
+                db.add_steering(pfad_db, car.steering_angle)
             car.stop()
             car.usm.stop
         else:
