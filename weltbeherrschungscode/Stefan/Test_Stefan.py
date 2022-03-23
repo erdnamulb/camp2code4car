@@ -1,4 +1,6 @@
 import sys, os
+
+from numpy import angle, bool_
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *
 import loggingc2c as log
@@ -12,6 +14,7 @@ class BaseCar():
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
+        self._bool_turn = True
         
         try:
             path= os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code')
@@ -85,6 +88,14 @@ class BaseCar():
 
             now += .5
             print(f"time= {now:.1f} set_angle = {angle}")
+    
+    def turn_direction(self):
+        if self._bool_turn:
+            angle = 45
+        else:
+            angle = 135
+        self._bool_turn = not self._bool_turn
+        return angle
 
 
 class SonicCar(BaseCar):
@@ -98,9 +109,19 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
-def avoid_crash(car):
+
+def avoid_crash(car, speed):
     car.stop()
-    car.s
+    time.sleep(.5)
+    car.drive(speed,-1)
+    time.sleep(1)
+    car.steering_angle = car.turn_direction()
+    car.drive(speed, -1)
+    time.sleep(2)
+    car.stop()
+    car.steering_angle = 90
+    car.drive(speed, 1)
+
 
 #@click.command()
 #@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
@@ -202,6 +223,18 @@ def main(modus, car):
 
         elif modus == 4:
             print(modi[modus])
+            loop_count = 0
+            while loop_count < 5:
+                car.steering_angle = 90
+                car.drive(40,1)
+                distance = car.distance
+                while distance > 12 or distance < 0:
+                    distance = car.distance
+                    print(distance)
+                    time.sleep(.1)
+                avoid_crash(car, 40)
+                loop_count += 1
+            car.stop()
         
         elif modus == 5:
             print(modi[modus])
@@ -236,7 +269,7 @@ def main(modus, car):
 if __name__ == '__main__':
     
     car = SonicCar()
-    log.makedatabase(f"{sys.path[0]}/logdata.db")
+    log.makedatabase(f"{sys.path[0]}/logdata.sqlite")
 
     try:
         modus = sys.argv[1]
