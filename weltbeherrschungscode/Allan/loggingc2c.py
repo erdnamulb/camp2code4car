@@ -66,16 +66,40 @@ def add_usm(name, value):
     '''Hinzufügen von Werten aus Ultraschallsensor 
         mit Zeitstempel zum Zeitpunkt des Schreibens'''
     db = create_connection(name)
-    cursor = db.Cursor()
-    time = dt.datetime.timestamp(dt.datetime.now())
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
     db.execute("""
         INSERT INTO ultrasonic 
             (timestamp, distance)
         VALUES 
-            (time, value)""")
+            (?, ?); """,(time, value))
     db.commit()
     db.close()
 
+def add_driving(name, value1, value2):
+    '''Hinzufügen von Werten aus Ultraschallsensor 
+        mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    db = create_connection(name)
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    db.execute("""
+        INSERT INTO driving 
+            (timestamp, speed, direction)
+        VALUES 
+            (?, ?, ?); """,(time, value1, value2))
+    db.commit()
+    db.close()
+
+def add_steering(name, value):
+    '''Hinzufügen von Werten aus Ultraschallsensor 
+        mit Zeitstempel zum Zeitpunkt des Schreibens'''
+    db = create_connection(name)
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    db.execute("""
+        INSERT INTO steering 
+            (timestamp, angle)
+        VALUES 
+            (?, ?); """,(time, value))
+    db.commit()
+    db.close()
 
 def read_usm(name, series):
     db = create_connection(name)
