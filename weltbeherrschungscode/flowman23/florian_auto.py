@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 # aktuellen Pfad herausfinden:
 path_to_myproject = sys.path[0]
@@ -44,6 +45,7 @@ class BaseCar():
     @steering_angle.setter
     def steering_angle(self, angle):
          self._steering_angle = angle
+         fw.turn(angle)
 
     def stop(self):
         bw.stop()
@@ -64,24 +66,11 @@ class BaseCar():
         bw.speed = speed
 
 
-
-
-    #def drive(dr_speed, dr_angle)
-
-
-
-@click.command()
-@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
 def main(modus):
-    """Main Function for Executing the tasks
-
-
-    Args:
-        modus (int): The mode that can be choosen by the user
-    """
+    
     car = BaseCar()
 
-    print('-- Fahrparcours --------------------')
+    print('------ Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
         2: 'Fahrparcours 2 - Kreisfahrt mit max. Lenkwinkel',
@@ -115,13 +104,24 @@ def main(modus):
         if modus == 1:
             print(modi[modus])
             car.drive(50,1)
+            time.sleep(3)
+            car.stop()
             time.sleep(1)
             car.drive(50,-1)
-            time.sleep(1)
+            time.sleep(3)
             car.stop()
 
         elif modus == 2:
             print(modi[modus])
+            car.drive(50, 1)
+            time.sleep(1)
+            car.stop()
+            time.sleep(1)
+            car.steering_angle = 135
+            car.drive(50, 1)
+            time.sleep(8)
+            car.stop()
+            car.steering_angle = 90
 
         elif modus == 3:
             print(modi[modus])
@@ -144,35 +144,12 @@ def main(modus):
         
         modus = None
         break
-
+    
 if __name__ == '__main__':
     
-    main()
-
-    """
     try:
-        #Wackeln mit den Vorderrädern als Gruß
-        fw = Front_Wheels()
-        print(fw.get_angles)
-        fw.turn(45)
-        time.sleep(.5)
-        fw.turn(135)
-        time.sleep(.5)
-        fw.turn(90)
-        
-        
-        
-        bw = Back_Wheels()
-        bw.speed = 100
-        bw.forward()
-        time.sleep(2)
-        bw.backward()
-        time.sleep(2)
-        bw.stop()
-        
+        modus = sys.argv[1]
     except:
-        print('-- FEHLER --')
-        print(traceback.format_exc())
-    """
-    
-1
+        modus = None
+
+    main(modus)
