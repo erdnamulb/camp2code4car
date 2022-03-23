@@ -101,7 +101,7 @@ def add_steering(name, value):
     db.commit()
     db.close()
 
-def read_usm(name, series):
+def read_usm(name):
     db = create_connection(name)
     cursor = db.Cursor()
     cursor.execute("SELECT * FROM ultrasonic")
@@ -109,8 +109,33 @@ def read_usm(name, series):
     for row in rows:
         print(row)
     db.close()
+
+def read_infrared(name):
+    db = create_connection(name)
+    cursor = db.Cursor()
+    cursor.execute("SELECT * FROM infrared")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
     
-    
+def read_driving(name):
+    db = create_connection(name)
+    cursor = db.Cursor()
+    cursor.execute("SELECT * FROM driving")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
+
+def read_steering(name):
+    db = create_connection(name)
+    cursor = db.Cursor()
+    cursor.execute("SELECT * FROM steering")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close() 
 '''
 
 #db.execute(newentry_usm, (time, value))

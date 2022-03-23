@@ -146,11 +146,11 @@ def main(modus):
             while distance > 7 or distance < 0:
                 distance = Sonic.distance
                 time.sleep(.1)
-                print(distance)
+                print("Entferneung zum nächsten Hindernis:", distance,"cm")
                 db.add_usm(pfad_db, distance)
-                print(car.speed)
+                print("Aktuelle Geschwindigkeit:", car.speed,"cm/sek")
                 db.add_driving(pfad_db, car.speed, car.direction)
-                print(car.steering_angle)
+                print("Aktueller Lenkeinschlag:", car.steering_angle)
                 db.add_steering(pfad_db, car.steering_angle)
             car.stop()
             car.usm.stop
