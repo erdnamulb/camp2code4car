@@ -3,12 +3,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'cam
 from basisklassen import *
 import traceback
 
-# ----------------- init --------------------
-bw = Back_Wheels()
-fw = Front_Wheels()
-usm = Ultrasonic()
-irm = Infrared()
-
 
 class BaseCar():
 
@@ -16,8 +10,11 @@ class BaseCar():
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
-        bw.stop()
-        #fw.turn(self._steering_angle)
+        self.bw = Back_Wheels()
+        self.fw = Front_Wheels()
+        self.usm = Ultrasonic()
+        self.irm = Infrared()
+        self.bw.stop()
 
     @property
     def speed(self):
@@ -34,29 +31,50 @@ class BaseCar():
     @steering_angle.setter
     def steering_angle(self, angle):
         self._steering_angle = angle
-        fw.turn(angle)
+        self.fw.turn(angle)
 
     def stop(self):
-        bw.stop()
+        self.bw.stop()
 
     def drive(self, speed: int, direction: int):
         self._direction = direction
         if direction == 1: #vorwärts
             self._direction = 1
-            bw.forward()
+            self.bw.forward()
         elif direction == -1: #rückwärts
-            bw.backward()
+            self.bw.backward()
             self._direction = -1
         else: # alles andere = stop
             self.stop()
             self._direction = 0
 
         self._speed = speed
-        bw.speed = speed
+        self.bw.speed = speed
+    
+    def wait_angle(self,  waitTime: float, angle: int):
+        now = 0
+        while now < waitTime:
+            self.steering_angle = angle
+            time.sleep(.5)
+            now += .5
+            print(f"time= {now:.1f} set_angle = {angle}")
 
 
+class SonicCar(BaseCar):
 
+    def __init__(self):
+        super().__init__()
+        self._distance = 0
 
+    @property
+    def distance(self):
+        self._distance = self.usm.distance()
+        return self._distance
+
+class Fahrdaten():
+
+    def __init__(self) -> None:
+        self.speed = 0
 
 #@click.command()
 #@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
@@ -68,7 +86,7 @@ def main(modus):
         modus (int): The mode that can be choosen by the user
     """
 
-    car = BaseCar()
+    car = SonicCar()
 
     print('-- Fahrparcours --------------------')
     modi = {
@@ -119,6 +137,7 @@ def main(modus):
         elif modus == 2:
             print(modi[modus])
             car.steering_angle = 90
+            time.sleep(.3)
             print("vorwärts")
             car.drive(40,1)
             time.sleep(1)
@@ -127,13 +146,16 @@ def main(modus):
             print("Uhrzeigersinn")
             car.steering_angle = 135
             time.sleep(.3)
-            car.drive(40,1)
-            time.sleep(8)
+            #car.drive(40,1)
+            car.wait_angle(10, 135)
             car.stop()
+            #car.steering_angle = 90
+            time.sleep(1)
             print("Zurück")
             car.steering_angle = 135
-            car.drive(40,-1)
-            time.sleep(8)
+            time.sleep(.3)
+            #car.drive(40,-1)
+            car.wait_angle(10, 135)
             car.stop()
             time.sleep(.5)
             print("Rückwärts")
@@ -145,6 +167,13 @@ def main(modus):
 
         elif modus == 3:
             print(modi[modus])
+            distance = car.distance
+            car.drive(40,1)
+            while distance > 7 or distance < 0:
+                distance = car.distance
+                print(distance)
+                time.sleep(.5)
+            car.stop()
 
         elif modus == 4:
             print(modi[modus])
