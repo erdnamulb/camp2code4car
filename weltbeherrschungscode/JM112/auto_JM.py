@@ -10,10 +10,10 @@ from basisklassen import *
 
 
 #Objekte der Basisklassen
-bw = Back_Wheels()
-fw = Front_Wheels()
-usm = Ultrasonic()
-irm = Infrared()
+#bw = Back_Wheels()
+#fw = Front_Wheels()
+#usm = Ultrasonic()
+#irm = Infrared()
 
 
 class BaseCar():
@@ -32,6 +32,10 @@ class BaseCar():
         self._speed = 0
         self._direction = 1
         self._steering_angle = 90
+        self.fw = Front_Wheels()
+        self.bw = Back_Wheels()
+        self.usm = Ultrasonic()
+        self.irm = Infrared()
         
         
 
@@ -42,7 +46,7 @@ class BaseCar():
     @steering_angle.setter
     def steering_angle(self, angle):
         self._steering_angle = angle
-        fw.turn(angle)
+        self.fw.turn(angle)
 
     @property
     def speed(self):
@@ -62,19 +66,19 @@ class BaseCar():
 
     def drive(self, speed_value, direction):
         self.speed = speed_value
-        bw.speed = speed_value
+        self.bw.speed = speed_value
         if direction == 1:
             self._direction = 1
-            bw.forward()
+            self.bw.forward()
         elif direction == -1:
             self._direction = -1
-            bw.backward()
+            self.bw.backward()
         else: 
             self._direction = 0
             self.stop()
     
     def stop(self):
-            bw.stop()
+            self.bw.stop()
 
 
 class SonicCar(BaseCar):
@@ -85,7 +89,7 @@ class SonicCar(BaseCar):
 
     @property
     def distance(self):
-        self._distance = usm.distance()
+        self._distance = self.usm.distance()
         return self._distance
 
 
@@ -104,7 +108,7 @@ def main(modus):
     car = BaseCar()
     scar = SonicCar()
 
-    db_w_path = f"{sys.path[0]}/JM.sqlite"
+    db_w_path = f"{sys.path[0]}/JM.sqlite" #Pfadrückgabe: /home/pi/git/camp2code4car/weltbeherrschungscode/JM112/JM.sqlite
     log.makedatabase(db_w_path)
 
     print('-- Auswahl Fahrparcours --------------------')
@@ -181,7 +185,7 @@ def main(modus):
         scar.drive(50, 1)
         while True:
             if scar.distance >= 7 or scar.distance < 0:
-                print("Abstand zum Hindernis", scar.distance) #umschreiben
+                print("Abstand zum Hindernis", scar.distance) 
                 log.add_usm(db_w_path, scar.distance)
                 print("Geschwindigkeit:", scar.speed)
                 print("Fahrrichtung:", scar.direction)
