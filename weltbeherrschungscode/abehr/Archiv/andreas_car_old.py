@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-import weltbeherrschungscode.abehr.Archiv.loggingc2c as log
+import weltbeherrschungscode.abehr.Archiv.loggingc2c20220323 as log
 # from ../../camp2code-project_phase_1/Code/basisklassen import *
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *

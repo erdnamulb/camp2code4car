@@ -1,8 +1,10 @@
+import random
 import loggingc2c as db
 import sys
 import click
 import datetime as dt
 import os
+import sqlite3
 
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/Code')
 from basisklassen import *
@@ -12,6 +14,8 @@ db.makedatabase(f"{sys.path[0]}/AllanDBmulti.sqlite")
 pfad_db_multi = f"{sys.path[0]}/AllanDBmulti.sqlite"
 db.makedatabase_singletable(f"{sys.path[0]}/AllanDBsingle.sqlite")
 pfad_db_single = f"{sys.path[0]}/AllanDBsingle.sqlite"
+
+df = db.init_dataframe()
 
 
 class BaseCar():
@@ -76,12 +80,20 @@ Sonic = SonicCar()
 
 
 def hindernisumfahren():
+    auswahl = [135,45]
+    angle = random.choice(auswahl)
     car.drive(40, -1)
     time.sleep(1)
-    car.steering_angle = -135
-    car.drive(40, -1)
+    car.steering_angle = angle
+    car.drive(50, -1)
     time.sleep(2)
     car.stop()
+    if angle == 135:
+        car.steering_angle = 45
+    else:
+        car.steering_angle = 135
+    car.drive(50, 1)
+    time.sleep(2)
     car.steering_angle = 90
     car.stop()
 
@@ -206,12 +218,9 @@ def main(modus):
                     distance = Sonic.distance
                     time.sleep(.1)
                     print("Entferneung zum nächsten Hindernis:", distance, "cm")
-                    db.add_usm(pfad_db_multi, distance)
+                    db.add_row_df(df, distance, [0, 0, 0, 0, 0], car.speed, car.direction, car.steering_angle)
                     print("Aktuelle Geschwindigkeit:", car.speed, "cm/sek")
-                    db.add_driving(pfad_db_multi, car.speed, car.direction)
                     print("Aktueller Lenkeinschlag:", car.steering_angle)
-                    db.add_steering(pfad_db_multi, car.steering_angle)
-                    db.add_data(pfad_db_single, distance, 0, car.speed, car.direction, car.steering_angle)
                 car.stop()
                 hindernisumfahren()
                 x = input("Soll weitergefahren werden? ja/nein: (j/n) ")
@@ -220,7 +229,36 @@ def main(modus):
             print('Abruch.')
 
         car.usm.stop
+        conn = sqlite3.connect(f"{sys.path[0]}/AllanDBsingle.sqlite")
+        df.to_sql("drivedata", conn, if_exists = "append", index = False)
+        print(df)
 
-
+    if modus == 6:
+        x = input(
+            'ACHTUNG! Das Auto wird ein Stück fahren!\n Dücken Sie ENTER zum Start.')
+        print('Abfolge Fahrparcour1')
+        if x == '':
+            car.steering_angle = 135
+            car.drive(30, 1)
+            time.sleep(2)
+            car.steering_angle = 45
+            car.drive(30, -1)
+            time.sleep(2)
+            car.steering_angle = 90
+            car.drive(30, -1)
+            time.sleep(2)
+            car.steering_angle = 135
+            car.drive(30, 1)
+            time.sleep(2)
+            car.steering_angle = 45
+            car.drive(30, -1)
+            time.sleep(2)
+            car.steering_angle = 90
+            car.drive(30, -1)
+            time.sleep(2)
+            car.stop()
+    else:
+        print('Abruch.')
+        
 if __name__ == '__main__':
     main()

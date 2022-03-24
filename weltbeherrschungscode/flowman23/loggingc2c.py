@@ -1,5 +1,52 @@
 import sqlite3
 import datetime as dt
+import pandas as pd
+
+
+# Dataframe Handling:
+
+def init_dataframe():
+    '''Dataframe df_name initial erzeugen und mit '0' in erster Zeile befüllen. 
+    
+    Returns
+    -------
+    df_name
+        dataframe df_name mit Spalten (10): timestamp, distance, irvalues 1-5, speed, direction, angle
+    '''
+
+    data = {'timestamp':  [0],
+        'distance': [0],
+        'ir1': [0],
+        'ir2': [0],
+        'ir3': [0],
+        'ir4': [0],
+        'ir5': [0],
+        'speed': [0],
+        'direction': [0],
+        'angle': [0]
+        }
+    df_name = pd.DataFrame(data)
+    return df_name
+
+
+def add_row_df(df_name, dist, irval, speed, dir, ang):
+    '''Dataframe df_name um eine Zeile mit den übergebenen Werten erweitern. 
+    Spalten: timestamp, distance, irvalues (Liste aus 5 Elementen), speed, direction, angle
+
+    Returns
+    -------
+    df_name
+        dataframe df_name mit neuen Werten in zusätzlicher Zeile.
+    '''
+    ir1 = irval[0]
+    ir2 = irval[1]
+    ir3 = irval[2]
+    ir4 = irval[3]
+    ir5 = irval[4]
+    i = df_name.index.size
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    df_name.loc[i] = (time , dist , ir1, ir2, ir3, ir4, ir5 , speed , dir , ang)
+    return df_name
 
 
 def create_connection(db_file):
@@ -71,7 +118,7 @@ def makedatabase_singletable(name: str):
             Erfasst werden 
             timestamp,
             distance,
-            irvalue,
+            ir1-5,
             speed,
             direction,
             angle'''
@@ -83,7 +130,11 @@ def makedatabase_singletable(name: str):
                 id INTEGER
                 , timestamp VARCHAR(20)
                 , distance INTEGER
-                , irvalue INTEGER
+                , ir1 INTEGER
+                , ir2 INTEGER
+                , ir3 INTEGER
+                , ir4 INTEGER
+                , ir5 INTEGER
                 , speed INTEGER
                 , direction INTEGER
                 , angle INTEGER
@@ -204,16 +255,16 @@ def read_all(name):
 
 # Funktionen für Singletable Datenbank:
 
-def add_data(name, valuedist, valueir, valuespd, valuedir, valueang):
+def add_data(name, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang):
     '''Hinzufügen von Datensatz mit Zeitstempel (wird automatisch generiert) zum Zeitpunkt des Schreibens.
         Reihenfolge: Datenbankname, Ultraschall, Infrarot, Geschwindigkeit, Direcition, Lenkwinkel'''
     time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
     db.execute("""
         INSERT INTO drivedata 
-            (timestamp, distance, irvalue, speed, direction, angle)
+            (timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle)
         VALUES 
-            (?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir, valuespd, valuedir, valueang))
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang))
     db.commit()
     db.close()
 

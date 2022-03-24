@@ -1,6 +1,7 @@
+from datetime import datetime
 import sys, os
 
-from numpy import angle, bool_
+import numpy as np
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *
 import loggingc2c as log
@@ -109,6 +110,36 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
+class SensorCar(SonicCar):
+
+    def __init__(self):
+        super().__init__()
+        self._ir_values = []
+
+    def get_average(self, mount: int = 10):
+        """Returns the mean value of the measurements.
+
+        Args:
+            mount (int): Number of measurements taken. Defaults to 10.
+
+        Returns:
+            [float]: List of measurement as mean of 'mount' individual measurements.
+        """
+        return self.irm.get_average(mount)
+
+    def cali_references(self) -> None:
+        """Recording the reference
+        """
+        self.irm.cali_references()
+    
+    def read_analog(self) -> list:
+        """Reads the value of the infrared module as analog.
+
+        Returns:
+            [list]: List of bytes of the measurement of each sensor read in as analog values. 
+        """
+        return self.irm.read_analog()
+
 
 def avoid_crash(car, speed):
     car.stop()
@@ -125,7 +156,7 @@ def avoid_crash(car, speed):
 
 #@click.command()
 #@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
-def main(modus, car):
+def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
 
 
@@ -238,6 +269,56 @@ def main(modus, car):
         
         elif modus == 5:
             print(modi[modus])
+            high_value = 140
+            line_value = 100
+            car.steering_angle = 90
+            #print(car.get_average(50))
+            #car.cali_references()
+            while True:
+                ir_data = car.read_analog()
+                print(f"{ir_data}")
+                # Prüfen, ob Linie noch da ist
+                line_found = False
+                for ir in ir_data:
+                    if ir < line_value:
+                        line_found = True
+                        time_start = 0
+                if not line_found:
+                    if time_start == 0:
+                        time_start = datetime.timestamp(datetime.now())
+                    time_now = datetime.timestamp(datetime.now())
+                    print(time_now - time_start)
+                    if time_now - time_start < 2:
+                        ir_data = car.read_analog()
+                        for ir in ir_data:
+                            if ir < line_value: #line found
+                                time_start = 0
+                        time.sleep(.1)
+                        continue
+                    car.steering_angle = 90
+                    car.stop()
+                    break
+                # Lenken
+                analog = np.array(ir_data)
+                min_ir = np.min(analog)
+                min_pos = np.where(analog == min_ir)[0][0]
+                print(f"min = {min_ir} Position: {min_pos}")
+                if min_pos == 0:
+                    car.steering_angle = 45
+                    car.drive(30,1)
+                elif min_pos == 1:
+                    car.steering_angle = 65
+                    car.drive(35,1)
+                elif min_pos == 2:
+                    car.steering_angle = 90
+                    car.drive(40,1)
+                elif min_pos == 3:
+                    car.steering_angle = 115
+                    car.drive(35,1)
+                elif min_pos == 4:
+                    car.steering_angle = 135
+                    car.drive(30,1)
+                time.sleep(.1)
         
         elif modus == 6:
             print(modi[modus])
@@ -268,7 +349,7 @@ def main(modus, car):
 
 if __name__ == '__main__':
     
-    car = SonicCar()
+    car = SensorCar()
     log.makedatabase(f"{sys.path[0]}/logdata.sqlite")
 
     try:
