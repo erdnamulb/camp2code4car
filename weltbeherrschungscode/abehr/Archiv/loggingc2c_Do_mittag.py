@@ -45,7 +45,7 @@ def add_row_df(df_name, dist, irval, speed, dir, ang):
     ir5 = irval[4]
     i = df_name.index.size
     time = str(dt.datetime.timestamp(dt.datetime.now()))
-    df_name.loc[i] = (time , dist , ir1, ir2, ir3, ir4, ir5 , speed , dir , ang)
+    df_name.loc[i+1] = (time , dist , ir1, ir2, ir3, ir4, ir5 , speed , dir , ang)
     return df_name
 
 
@@ -58,7 +58,7 @@ def create_connection(db_file):
     conn = None
     try:
         conn = sqlite3.connect(db_file)
-        #print("connection success")
+        print("connection success")
     except Error as e:
         print(e)
 
@@ -118,7 +118,7 @@ def makedatabase_singletable(name: str):
             Erfasst werden 
             timestamp,
             distance,
-            ir1-5,
+            irvalue,
             speed,
             direction,
             angle'''
@@ -130,11 +130,7 @@ def makedatabase_singletable(name: str):
                 id INTEGER
                 , timestamp VARCHAR(20)
                 , distance INTEGER
-                , ir1 INTEGER
-                , ir2 INTEGER
-                , ir3 INTEGER
-                , ir4 INTEGER
-                , ir5 INTEGER
+                , irvalue INTEGER
                 , speed INTEGER
                 , direction INTEGER
                 , angle INTEGER
@@ -255,16 +251,16 @@ def read_all(name):
 
 # Funktionen für Singletable Datenbank:
 
-def add_data(name, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang):
+def add_data(name, valuedist, valueir, valuespd, valuedir, valueang):
     '''Hinzufügen von Datensatz mit Zeitstempel (wird automatisch generiert) zum Zeitpunkt des Schreibens.
         Reihenfolge: Datenbankname, Ultraschall, Infrarot, Geschwindigkeit, Direcition, Lenkwinkel'''
     time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
     db.execute("""
         INSERT INTO drivedata 
-            (timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle)
+            (timestamp, distance, irvalue, speed, direction, angle)
         VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang))
+            (?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir, valuespd, valuedir, valueang))
     db.commit()
     db.close()
 
