@@ -5,7 +5,7 @@ import pandas as pd
 
 # Dataframe Handling:
 
-def init_dataframe(df_name):
+def init_dataframe():
     '''Dataframe df_name initial erzeugen und mit '0' in erster Zeile befüllen. 
     
     Returns

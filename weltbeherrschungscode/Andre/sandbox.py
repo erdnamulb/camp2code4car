@@ -13,7 +13,7 @@ lg.read_data(db_path)
 print('lesen fertig')
 '''
 
-the_frame = log.init_dataframe('daten')
+the_frame = log.init_dataframe()
 print(the_frame)
 
 log.add_row_df(the_frame, 1, 2, 3, 4, 5)
