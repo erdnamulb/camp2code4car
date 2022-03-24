@@ -1,12 +1,10 @@
 import sys, os
-
-from numpy import angle, bool_
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *
+import traceback
 import loggingc2c as log
 
-import traceback
-
+db_path = f"{sys.path[0]}/andreasdb.sqlite"
 
 class BaseCar():
 
@@ -14,7 +12,6 @@ class BaseCar():
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
-        self._bool_turn = True
         
         try:
             path= os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code')
@@ -77,25 +74,9 @@ class BaseCar():
         now = 0
         while now < waitTime:
             self.steering_angle = angle
-            time.sleep(.25)
-            
-            if angle > 90:
-                offset = -5
-            else:
-                offset = 5
-            self.steering_angle = angle + offset
-            time.sleep(.25)
-
+            time.sleep(.5)
             now += .5
             print(f"time= {now:.1f} set_angle = {angle}")
-    
-    def turn_direction(self):
-        if self._bool_turn:
-            angle = 45
-        else:
-            angle = 135
-        self._bool_turn = not self._bool_turn
-        return angle
 
 
 class SonicCar(BaseCar):
@@ -109,23 +90,13 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
+class Fahrdaten():
 
-def avoid_crash(car, speed):
-    car.stop()
-    time.sleep(.5)
-    car.drive(speed,-1)
-    time.sleep(1)
-    car.steering_angle = car.turn_direction()
-    car.drive(speed, -1)
-    time.sleep(2)
-    car.stop()
-    car.steering_angle = 90
-    car.drive(speed, 1)
+    def __init__(self) -> None:
+        self.speed = 0
 
 
-#@click.command()
-#@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
-def main(modus, car):
+def main(modus):
     """Main Function for Executing the tasks
 
 
@@ -133,9 +104,9 @@ def main(modus, car):
         modus (int): The mode that can be choosen by the user
     """
 
-    
+    car = SonicCar()
 
-    print('------ Fahrparcours --------------------')
+    print('-- Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
         2: 'Fahrparcours 2 - Kreisfahrt mit max. Lenkwinkel',
@@ -148,6 +119,7 @@ def main(modus, car):
     }
 
     if modus == None:
+        print('--' * 20)
         print('Auswahl:')
         for m in modi.keys():
             print('{i} - {name}'.format(i=m, name=modi[m]))
@@ -156,8 +128,8 @@ def main(modus, car):
     while True:
 
         while modus == None:
-            modus = input("Wähle  (Abbruch mit '0'): ? ")
-            if modus in ['1', '2', '3', '4', '5', '6', '7', '8', '0']:
+            modus = input('Wähle  (Andere Taste für Abbruch): ? ')
+            if modus in ['1', '2', '3', '4', '5', '6', '7', '0']:
                 break
             else:
                 modus = None
@@ -167,49 +139,25 @@ def main(modus, car):
 
         if modus == 1:
             print(modi[modus])
-            car.steering_angle = 90
-            print("vorwärts")
-            car.drive(30,1)
-            time.sleep(3)
-            print("stopp")
-            car.stop()
+            car.drive(50,1)
             time.sleep(1)
-            print("rückwärts")
-            car.drive(30,-1)
-            time.sleep(3)
-            print("stopp")
+            car.drive(50,-1)
+            time.sleep(1)
             car.stop()
 
         elif modus == 2:
             print(modi[modus])
-            car.steering_angle = 90
-            time.sleep(.3)
-            print("vorwärts")
-            car.drive(40,1)
+            car.drive(50,1)
             time.sleep(1)
-            car.stop()
-            time.sleep(.5)
-            print("Uhrzeigersinn")
             car.steering_angle = 135
-            time.sleep(.3)
-            car.drive(40,1)
-            car.wait_angle(10, 135)
+            time.sleep(8)
+            car.stop()
+            car.steering_angle = 45
+            time.sleep(1)
+            car.drive(50,-1)
+            time.sleep(8)
             car.stop()
             car.steering_angle = 90
-            time.sleep(1)
-            print("Zurück")
-            car.steering_angle = 135
-            time.sleep(.3)
-            car.drive(40,-1)
-            car.wait_angle(10, 135)
-            car.stop()
-            time.sleep(.5)
-            print("Rückwärts")
-            car.steering_angle = 90
-            car.drive(30,-1)
-            time.sleep(1)
-            car.stop()
-            
 
         elif modus == 3:
             print(modi[modus])
@@ -217,24 +165,28 @@ def main(modus, car):
             car.drive(40,1)
             while distance > 7 or distance < 0:
                 distance = car.distance
+                log.add_driving(db_path, car.speed, car.direction)
+                log.add_usm(db_path,distance)
                 print(distance)
                 time.sleep(.1)
             car.stop()
+            log.add_driving(db_path, car.speed, car.direction)
+            #Schleife mit USM Distance
+            """freigabe = car.distance
+            print(freigabe)
+            while freigabe > 10 or freigabe < 0:
+                print(freigabe)
+                car.drive(50,1)
+                print("fahre vorwärts")
+                time.sleep(1)
+            print(freigabe)
+            car.stop()
+            print("Fahrt gestoppt")"""
+            
+            
 
         elif modus == 4:
             print(modi[modus])
-            loop_count = 0
-            while loop_count < 5:
-                car.steering_angle = 90
-                car.drive(40,1)
-                distance = car.distance
-                while distance > 12 or distance < 0:
-                    distance = car.distance
-                    print(distance)
-                    time.sleep(.1)
-                avoid_crash(car, 40)
-                loop_count += 1
-            car.stop()
         
         elif modus == 5:
             print(modi[modus])
@@ -244,20 +196,6 @@ def main(modus, car):
         
         elif modus == 7:
             print(modi[modus])
-
-        elif modus == 8:
-            #print(modi[modus])
-            run_loop = True
-            while run_loop:
-                for a in range(45, 136, 5):
-                    time.sleep(.1)
-                    car.steering_angle = a
-                    print(f"angle : {car.steering_angle}")
-                for a in range(135, 44, -5):
-                    time.sleep(.1)
-                    car.steering_angle = a
-                    print(f"angle : {car.steering_angle}")
-                run_loop = True
         
         elif modus == 0:
             print("Ende")
@@ -268,14 +206,10 @@ def main(modus, car):
 
 if __name__ == '__main__':
     
-    car = SonicCar()
-    log.makedatabase(f"{sys.path[0]}/logdata.sqlite")
-
     try:
         modus = sys.argv[1]
     except:
         modus = None
 
-    main(modus, car)
-    car.stop()
+    main(modus)
 
