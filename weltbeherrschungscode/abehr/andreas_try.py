@@ -4,6 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'cam
 from basisklassen import *
 import traceback
 import loggingc2c as log
+from random import randint 
 
 db_path = f"{sys.path[0]}/andreasdb.sqlite"
 #db_multi_w_path = f"{sys.path[0]}/andreas_db_multi.sqlite"
@@ -111,22 +112,43 @@ class SonicCar(BaseCar):
         for a in angles:
             distance = self.distance
             self.drive(40,1)
+            #auto fährt
             while distance > 7 or distance < 0:                
                 distance = self.distance
                 speed = self.speed
                 direction = self.direction
                 steering_angle = self.steering_angle
                 print_data(distance, speed, direction, steering_angle)
-                #write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle)
                 log.add_row_df(andreas_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
                 print(20*"--")
                 time.sleep(.3)
             self.stop()
             print("Auto angehalten")
-            
-            
-            
-            print(andreas_pdf)
+            #hindernis erkannt
+            randbool = bool(randint(0,1)) 
+            if randbool == 0:
+                self.steering_angle = 45
+            else:
+                self.steering_angle = 135
+            self.drive(40,-1)
+            distance = self.distance
+            speed = self.speed
+            direction = self.direction
+            steering_angle = self.steering_angle
+            print_data(distance, speed, direction, steering_angle)
+            log.add_row_df(andreas_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+            print(20*"--")
+            time.sleep(3)
+            self.steering_angle = 90
+            self.stop()
+            distance = self.distance
+            speed = self.speed
+            direction = self.direction
+            steering_angle = self.steering_angle
+            print_data(distance, speed, direction, steering_angle)
+            log.add_row_df(andreas_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+            print(20*"--")
+           
             conn = log.create_connection(db_single_w_path)
             andreas_pdf.to_sql('drivedata', conn, if_exists='append', index = False)            
             car.usm.stop() # Sensor ausschalten               
