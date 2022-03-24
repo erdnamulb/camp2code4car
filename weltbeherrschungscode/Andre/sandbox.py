@@ -1,7 +1,14 @@
+import sys, os
 import loggingc2c as lg
-lg.makedatabase('cardata.db')
+
+db_path = f"{sys.path[0]}/cardata.db"
+print(db_path)
+
+
+lg.makedatabase_singletable(db_path)
 print('fertig')
-lg.add_usm('cardata.db',42)
+lg.add_data(db_path, 1, 2, 3, 4, 5)
 print('geschrieben')
-lg.read_usm('cardata.db')
+lg.read_data(db_path)
 print('lesen fertig')
+
