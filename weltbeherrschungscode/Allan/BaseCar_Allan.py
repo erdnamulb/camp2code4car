@@ -80,16 +80,19 @@ Sonic = SonicCar()
 
 
 def hindernisumfahren():
-    auswahl = [135,-135]
+    auswahl = [135,45]
     angle = random.choice(auswahl)
     car.drive(40, -1)
     time.sleep(1)
     car.steering_angle = angle
-    car.drive(40, -1)
+    car.drive(50, -1)
     time.sleep(2)
     car.stop()
-    car.steering_angle = angle
-    car.drive(40, 1)
+    if angle == 135:
+        car.steering_angle = 45
+    else:
+        car.steering_angle = 135
+    car.drive(50, 1)
     time.sleep(2)
     car.steering_angle = 90
     car.stop()
@@ -218,7 +221,6 @@ def main(modus):
                     db.add_row_df(df, distance, [0, 0, 0, 0, 0], car.speed, car.direction, car.steering_angle)
                     print("Aktuelle Geschwindigkeit:", car.speed, "cm/sek")
                     print("Aktueller Lenkeinschlag:", car.steering_angle)
-                    db.add_data(pfad_db_single,distance, 0, 0, 0, 0, 0, car.speed, car.direction, car.steering_angle )
                 car.stop()
                 hindernisumfahren()
                 x = input("Soll weitergefahren werden? ja/nein: (j/n) ")
@@ -231,6 +233,32 @@ def main(modus):
         df.to_sql("drivedata", conn, if_exists = "append", index = False)
         print(df)
 
-
+    if modus == 6:
+        x = input(
+            'ACHTUNG! Das Auto wird ein Stück fahren!\n Dücken Sie ENTER zum Start.')
+        print('Abfolge Fahrparcour1')
+        if x == '':
+            car.steering_angle = 135
+            car.drive(30, 1)
+            time.sleep(2)
+            car.steering_angle = 45
+            car.drive(30, -1)
+            time.sleep(2)
+            car.steering_angle = 90
+            car.drive(30, -1)
+            time.sleep(2)
+            car.steering_angle = 135
+            car.drive(30, 1)
+            time.sleep(2)
+            car.steering_angle = 45
+            car.drive(30, -1)
+            time.sleep(2)
+            car.steering_angle = 90
+            car.drive(30, -1)
+            time.sleep(2)
+            car.stop()
+    else:
+        print('Abruch.')
+        
 if __name__ == '__main__':
     main()
