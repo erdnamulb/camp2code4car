@@ -66,7 +66,26 @@ def add_usm(name, value):
     '''Hinzufügen von Werten aus Ultraschallsensor 
         mit Zeitstempel zum Zeitpunkt des Schreibens'''
     time = str(dt.datetime.timestamp(dt.datetime.now()))
-    db = create_connection(name)
+    try:
+        sqliteConnection = sqlite3.connect(name)
+        cursor = sqliteConnection.cursor()
+        print("Successfully Connected to SQLite")
+        sqlite_insert_query = """INSERT INTO ultrasonic
+                            (timestamp, distance) 
+                            VALUES 
+                            ( ?, ?)"""
+        count = cursor.execute(sqlite_insert_query, (time, value))
+        sqliteConnection.commit()
+        print("Record inserted successfully into ultrasonic table ", cursor.rowcount)
+        cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to insert data into sqlite table", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+            print("The SQLite connection is closed")
+
+    ''' db = create_connection(name)
     db.execute("""
         INSERT INTO ultrasonic 
             (timestamp, distance)
@@ -74,6 +93,7 @@ def add_usm(name, value):
             (time, value);""")
     db.commit()
     db.close()
+    '''
 
 
 def read_usm(name):
