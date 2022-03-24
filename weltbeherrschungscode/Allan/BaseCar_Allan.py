@@ -88,7 +88,7 @@ def hindernisumfahren():
     car.drive(40, -1)
     time.sleep(2)
     car.stop()
-    car.steering_angle = 135
+    car.steering_angle = angle
     car.drive(40, 1)
     time.sleep(2)
     car.steering_angle = 90
