@@ -109,7 +109,10 @@ def main(modus):
     scar = SonicCar()
 
     db_w_path = f"{sys.path[0]}/JM.sqlite" #Pfadrückgabe: /home/pi/git/camp2code4car/weltbeherrschungscode/JM112/JM.sqlite
-    log.makedatabase(db_w_path)
+    log.makedatabase_multitable(db_w_path)
+    db_w_path_single = f"{sys.path[0]}/JMsingle.sqlite"
+    log.makedatabase_singletable(db_w_path_single) 
+
 
     print('-- Auswahl Fahrparcours --------------------')
     modi = {
@@ -185,14 +188,19 @@ def main(modus):
         scar.drive(50, 1)
         while True:
             if scar.distance >= 7 or scar.distance < 0:
-                print("Abstand zum Hindernis", scar.distance) 
+                db_distance = scar.distance
+                print("Abstand zum Hindernis", db_distance) 
                 log.add_usm(db_w_path, scar.distance)
-                print("Geschwindigkeit:", scar.speed)
-                print("Fahrrichtung:", scar.direction)
-                log.add_driving(db_w_path, scar.speed, scar.direction)
-                print("Lenkwinkel:", scar.steering_angle)
-                log.add_steering(db_w_path, scar.steering_angle)
+                db_speed = scar.speed
+                print("Geschwindigkeit:", db_speed)
+                db_direction = scar.speed
+                print("Fahrrichtung:", db_direction)
+                log.add_driving(db_w_path, db_speed, db_direction)
+                db_steering_angle = scar.steering_angle
+                print("Lenkwinkel:", db_steering_angle)
+                log.add_steering(db_w_path, db_steering_angle)
                 print(20*"--")
+                log.add_data(db_w_path_single,db_distance, 0, db_speed, db_direction, db_steering_angle)
                 time.sleep(0.5)
             else:
                 scar.stop()
