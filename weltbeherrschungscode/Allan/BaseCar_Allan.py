@@ -1,8 +1,10 @@
+import random
 import loggingc2c as db
 import sys
 import click
 import datetime as dt
 import os
+import sqlite3
 
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/Code')
 from basisklassen import *
@@ -78,12 +80,17 @@ Sonic = SonicCar()
 
 
 def hindernisumfahren():
+    auswahl = [135,-135]
+    angle = random.choice(auswahl)
     car.drive(40, -1)
     time.sleep(1)
-    car.steering_angle = -135
+    car.steering_angle = angle
     car.drive(40, -1)
     time.sleep(2)
     car.stop()
+    car.steering_angle = 135
+    car.drive(40, 1)
+    time.sleep(2)
     car.steering_angle = 90
     car.stop()
 
@@ -211,6 +218,7 @@ def main(modus):
                     db.add_row_df(df, distance, [0, 0, 0, 0, 0], car.speed, car.direction, car.steering_angle)
                     print("Aktuelle Geschwindigkeit:", car.speed, "cm/sek")
                     print("Aktueller Lenkeinschlag:", car.steering_angle)
+                    db.add_data(pfad_db_single,distance, 0, 0, 0, 0, 0, car.speed, car.direction, car.steering_angle )
                 car.stop()
                 hindernisumfahren()
                 x = input("Soll weitergefahren werden? ja/nein: (j/n) ")
@@ -219,6 +227,8 @@ def main(modus):
             print('Abruch.')
 
         car.usm.stop
+        conn = sqlite3.connect(f"{sys.path[0]}/AllanDBsingle.sqlite")
+        df.to_sql("drivedata", conn, if_exists = "append", index = False)
         print(df)
 
 
