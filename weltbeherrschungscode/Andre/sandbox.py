@@ -16,6 +16,9 @@ print('lesen fertig')
 the_frame = log.init_dataframe()
 print(the_frame)
 
-log.add_row_df(the_frame, 1, [5,6,7,8,9], 3, 4, 5)
+log.add_row_df(the_frame, 3, [5,6,7,8,9], 3, 4, 5)
+log.add_row_df(the_frame, 5, [6,6,6,6,6], 15, 5, 5)
+log.add_row_df(the_frame, 7, [8,8,8,8,8], 25, 6, 5)
+log.add_row_df(the_frame, 11, [10,10,10,10,10], 35, 7, 5)
 print(the_frame)
 
