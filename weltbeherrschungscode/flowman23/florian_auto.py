@@ -95,10 +95,26 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
+def write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle):
+    log.add_usm(db_multi_w_path, distance)
+    log.add_driving(db_multi_w_path, speed, direction)                           
+    log.add_steering(db_multi_w_path, steering_angle)                           
+    log.add_data(db_single_w_path, distance, 0, speed, direction, steering_angle)
+    print("data logged")
 
-def main(modus, car):
-    db_w_path = f"{sys.path[0]}/flodb.sqlite"
-    log.makedatabase(db_w_path)
+
+def print_data(distance, speed, direction, steering_angle):
+    print("Abstand zum Hindernis", distance)
+    print("Geschwindigkeit:", speed)
+    print("Fahrrichtung:", "vorwärts" if direction == 1 else "rückwärts")
+    print("Lenkwinkel:", steering_angle)
+
+
+def main(modus, car: SonicCar):
+    db_multi_w_path = f"{sys.path[0]}/flodb_multi.sqlite"
+    db_single_w_path = f"{sys.path[0]}/flodb_single.sqlite"
+    log.makedatabase_multitable(db_multi_w_path)
+    log.makedatabase_singletable(db_single_w_path)
 
     print('------ Fahrparcours --------------------')
     modi = {
@@ -154,21 +170,20 @@ def main(modus, car):
             car.steering_angle = 90
 
         elif modus == 3:
-            #distance = car.distance
             car.drive(20,1)
             while car.distance > 7 or car.distance < 0:
-                #distance = car.distance
-                print("Abstand zum Hindernis", car.distance)
-                log.add_usm(db_w_path, car.distance)
-                print("Geschwindigkeit:", car.speed)
-                print("Fahrrichtung:", car.direction)
-                log.add_driving(db_w_path, car.speed, car.direction)
-                print("Lenkwinkel:", car.steering_angle)
-                log.add_steering(db_w_path, car.steering_angle)
+                distance = car.distance
+                speed = car.speed
+                direction = car.direction
+                steering_angle = car.steering_angle
+                print_data(distance, speed, direction, steering_angle)
+                write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle)
                 print(20*"--")
                 time.sleep(.3)
             car.stop()
-            print("Auto angehalten")
+            #print("Auto angehalten")
+            #car.drive(20, -1)
+            #while car.distance < 20:
             car.usm.stop() # Sensor ausschalten
 
         elif modus == 4:

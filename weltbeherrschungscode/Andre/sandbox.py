@@ -1,6 +1,6 @@
 import sys, os
-import loggingc2c as lg
-
+import loggingc2c as log
+'''
 db_path = f"{sys.path[0]}/cardata.db"
 print(db_path)
 
@@ -11,4 +11,11 @@ lg.add_data(db_path, 1, 2, 3, 4, 5)
 print('geschrieben')
 lg.read_data(db_path)
 print('lesen fertig')
+'''
+
+the_frame = log.init_dataframe()
+print(the_frame)
+
+log.add_row_df(the_frame, 1, [5,6,7,8,9], 3, 4, 5)
+print(the_frame)
 
