@@ -154,19 +154,19 @@ def main(modus, car):
             car.steering_angle = 90
 
         elif modus == 3:
-            distance = car.distance
+            #distance = car.distance
             car.drive(20,1)
-            while distance > 7 or distance < 0:
-                distance = car.distance
-                print("Abstand zum Hindernis", distance)
-                log.add_usm(db_w_path, distance)
+            while car.distance > 7 or car.distance < 0:
+                #distance = car.distance
+                print("Abstand zum Hindernis", car.distance)
+                log.add_usm(db_w_path, car.distance)
                 print("Geschwindigkeit:", car.speed)
                 print("Fahrrichtung:", car.direction)
                 log.add_driving(db_w_path, car.speed, car.direction)
                 print("Lenkwinkel:", car.steering_angle)
                 log.add_steering(db_w_path, car.steering_angle)
                 print(20*"--")
-                time.sleep(.1)
+                time.sleep(.3)
             car.stop()
             print("Auto angehalten")
             car.usm.stop() # Sensor ausschalten
@@ -193,10 +193,14 @@ def main(modus, car):
 if __name__ == '__main__':
     
     car = SonicCar()
+    #car.usm.timeout = 0.06
+    #print(car.usm.timeout)
+
     try:
         modus = sys.argv[1]
     except:
         modus = None
 
     main(modus, car)
+    #print(car.usm.timeout)
     car.usm.stop()
