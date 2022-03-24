@@ -3,7 +3,7 @@ import sys
 import time
 
 import andreas_car_0_1 as ab
-import loggingc2c as log
+import weltbeherrschungscode.abehr.Archiv.loggingc2c as log
 
 car = ab.SonicCar()
 

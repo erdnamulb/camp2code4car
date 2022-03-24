@@ -2,7 +2,7 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *
 import traceback
-import loggingc2c as log
+import weltbeherrschungscode.abehr.Archiv.loggingc2c as log
 
 db_path = f"{sys.path[0]}/andreasdb.sqlite"
 
