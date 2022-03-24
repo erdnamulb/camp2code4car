@@ -1,3 +1,4 @@
+from sqlite3 import dbapi2
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
 from basisklassen import *
@@ -105,6 +106,8 @@ def main(modus):
     """
 
     car = SonicCar()
+    log.makedatabase_multitable(db_path)
+    log.makedatabase_singletable(db_path)
 
     print('-- Fahrparcours --------------------')
     modi = {
@@ -165,11 +168,18 @@ def main(modus):
             car.drive(40,1)
             while distance > 7 or distance < 0:
                 distance = car.distance
+                if distance < 15:
+                    car.drive(30,1)
+                else:
+                    car.drive(50,1)
                 log.add_driving(db_path, car.speed, car.direction)
                 log.add_usm(db_path,distance)
+                log.add_steering(db_path,car.steering_angle)
+                log.add_data(db_path,car.distance,0, car.speed, car.direction, car.steering_angle)
                 print(distance)
                 time.sleep(.1)
             car.stop()
+            time.sleep(.1)
             log.add_driving(db_path, car.speed, car.direction)
             #Schleife mit USM Distance
             """freigabe = car.distance

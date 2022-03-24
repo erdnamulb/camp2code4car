@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import loggingc2c as log
 
 # working directory ermitteln und durchhangeln
 absolutepath = os.path.abspath(__file__)
@@ -78,7 +79,7 @@ class SonicCar(BaseCar):
     
     @property
     def distance(self):
-        self._distance = usm.distance()
+        self._distance = self.usm.distance()
         return self._distance
     
 
@@ -126,13 +127,18 @@ def parc3():
     print("Fahrparcours 3 - Vorwärtsfahrt bis Hindernis")
     car = SonicCar()
     print('erste Abstandsmessung: {}cm'.format(car.distance))
-    if car.distance > 3:
-        speed = 30
-        dir = 1
-        car.drive(speed, dir)
-        time.sleep(0.5)
-    else:
-        car.stop()
+    distance = car.distance
+    car.drive(40,1)
+    while distance > 7 or distance < 0:
+        distance = car.distance
+        print("Abstand zum Hindernis", distance)
+        print("Geschwindigkeit:", car.speed)
+        print("Fahrrichtung:", car.direction)
+        print(20*"--")
+        time.sleep(.1)
+    car.stop()
+    print("Auto angehalten")
+    car.usm.stop() # Sensor ausschalten
 
 
 def parc4(): 
