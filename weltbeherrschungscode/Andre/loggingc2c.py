@@ -1,5 +1,44 @@
 import sqlite3
 import datetime as dt
+import pandas as pd
+
+
+# Dataframe Handling:
+
+def init_dataframe(df_name):
+    '''Dataframe df_name initial erzeugen und mit '0' in erster Zeile befüllen. 
+    
+    Returns
+    -------
+    df_name
+        dataframe df_name mit Spalten: timestamp, distance, irvalue, speed, direction, angle
+    '''
+
+    data = {'timestamp':  [0],
+        'distance': [0],
+        'irvalue': [0],
+        'speed': [0],
+        'direction': [0],
+        'angle': [0]
+        }
+    df_name = pd.DataFrame(data)
+    return df_name
+
+
+def add_row_df(df_name, dist, irval, speed, dir, ang):
+    '''Dataframe df_name um eine Zeile mit den übergebenen Werten erweitern. 
+    Spalten: timestamp, distance, irvalue, speed, direction, angle
+
+    Returns
+    -------
+    df_name
+        dataframe df_name mit neuen Werten in zusätzlicher Zeile.
+    '''
+
+    i = df_name.index.size
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    df_name.loc[i+1] = (time , dist , irval , speed , dir , ang)
+    return df_name
 
 
 def create_connection(db_file):
