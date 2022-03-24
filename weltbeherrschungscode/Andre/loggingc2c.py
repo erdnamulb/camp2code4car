@@ -11,12 +11,16 @@ def init_dataframe():
     Returns
     -------
     df_name
-        dataframe df_name mit Spalten: timestamp, distance, irvalue, speed, direction, angle
+        dataframe df_name mit Spalten (10): timestamp, distance, irvalues 1-5, speed, direction, angle
     '''
 
     data = {'timestamp':  [0],
         'distance': [0],
-        'irvalue': [0],
+        'ir1': [0],
+        'ir2': [0],
+        'ir3': [0],
+        'ir4': [0],
+        'ir5': [0],
         'speed': [0],
         'direction': [0],
         'angle': [0]
@@ -27,17 +31,21 @@ def init_dataframe():
 
 def add_row_df(df_name, dist, irval, speed, dir, ang):
     '''Dataframe df_name um eine Zeile mit den übergebenen Werten erweitern. 
-    Spalten: timestamp, distance, irvalue, speed, direction, angle
+    Spalten: timestamp, distance, irvalues (Liste aus 5 Elementen), speed, direction, angle
 
     Returns
     -------
     df_name
         dataframe df_name mit neuen Werten in zusätzlicher Zeile.
     '''
-
+    ir1 = irval[0]
+    ir2 = irval[1]
+    ir3 = irval[2]
+    ir4 = irval[3]
+    ir5 = irval[4]
     i = df_name.index.size
     time = str(dt.datetime.timestamp(dt.datetime.now()))
-    df_name.loc[i+1] = (time , dist , irval , speed , dir , ang)
+    df_name.loc[i+1] = (time , dist , ir1, ir2, ir3, ir4, ir5 , speed , dir , ang)
     return df_name
 
 
