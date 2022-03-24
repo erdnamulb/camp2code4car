@@ -18,7 +18,9 @@ def create_connection(db_file):
     return conn
 
 
-def makedatabase(name: str):
+# Funktionen zum Anlegen von Datenbanken:
+
+def makedatabase_multitable(name: str):
     '''Anlegen einer Datenbank mit den Tabellen
         ultrasonic
         infrared
@@ -62,6 +64,39 @@ def makedatabase(name: str):
     except:
         print('Datenbank existiert schon.')
 
+
+def makedatabase_singletable(name: str):
+    '''Anlegen einer Datenbank mit der Tabelle
+        drivedata  
+            Erfasst werden 
+            timestamp,
+            distance,
+            irvalue,
+            speed,
+            direction,
+            angle'''
+    try:
+        db = sqlite3.connect(name)
+
+        db.execute("""
+            CREATE TABLE drivedata (
+                id INTEGER
+                , timestamp VARCHAR(20)
+                , distance INTEGER
+                , irvalue INTEGER
+                , speed INTEGER
+                , direction INTEGER
+                , angle INTEGER
+                , PRIMARY KEY(id))""")
+        
+        db.commit()
+        db.close()
+        print("Datenbank {} erstellt.",format(name))
+    except:
+        print('Datenbank existiert schon.')
+
+
+# Funktionen für Multitable-Datenbank:
 
 def add_usm(name, value):
     '''Hinzufügen von Werten aus Ultraschallsensor 
@@ -145,7 +180,6 @@ def read_infrared(name):
     db.close()
 
 
-
 def read_all(name):
     db = create_connection(name)
     cur = db.cursor()
@@ -166,17 +200,33 @@ def read_all(name):
     for row in rows:
         print(row)
     db.close()
-    
-'''
 
-#db.execute(newentry_usm, (time, value))
-#db = sqlite3.connect('drivedata.db')
-#cursor = db.Cursor()
 
-print("Verifikation:")
-abfrage = db.execute("""
-    SELECT *
-    FROM ultrasonic """)
-for eintrag in abfrage:
-    print(eintrag)
-'''
+# Funktionen für Singletable Datenbank:
+
+def add_data(name, valuedist, valueir, valuespd, valuedir, valueang):
+    '''Hinzufügen von Datensatz mit Zeitstempel (wird automatisch generiert) zum Zeitpunkt des Schreibens.
+        Reihenfolge: Datenbankname, Ultraschall, Infrarot, Geschwindigkeit, Direcition, Lenkwinkel'''
+    time = str(dt.datetime.timestamp(dt.datetime.now()))
+    db = create_connection(name)
+    db.execute("""
+        INSERT INTO drivedata 
+            (timestamp, distance, irvalue, speed, direction, angle)
+        VALUES 
+            (?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir, valuespd, valuedir, valueang))
+    db.commit()
+    db.close()
+
+
+def read_data(name):
+    '''Auslesen aller Daten aus der Singletable-Datenbank (vollständiger DB-Name muss übergeben werden).
+    Reihenfolge: Index, Zeitstempel, Ultraschall, Infrarot, Geschwindigkeit, Direcition, Lenkwinkel'''
+    db = create_connection(name)
+    cur = db.cursor()
+    cur.execute("SELECT * FROM drivedata")
+    rows = cur.fetchall()
+    for row in rows:
+        print(row)
+    db.close()
+
+
