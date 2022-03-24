@@ -57,6 +57,7 @@ class BaseCar():
         self.fw.turn(angle)
 
     def stop(self):
+        self._direction = 0
         self.bw.stop()
 
     def drive(self, speed: int, direction: int):
@@ -65,11 +66,11 @@ class BaseCar():
             self._direction = 1
             self.bw.forward()
         elif direction == -1: #rückwärts
-            self.bw.backward()
             self._direction = -1
+            self.bw.backward()
         else: # alles andere = stop
-            self.stop()
             self._direction = 0
+            self.stop()
 
         self._speed = speed
         self.bw.speed = speed
@@ -98,64 +99,80 @@ class BaseCar():
         self._bool_turn = not self._bool_turn
         return angle
 
+    def avoid_crash(self):
+        self.stop()
+        time.sleep(.5)
+        self.drive(self._speed,-1)
+        time.sleep(1)
+        self.steering_angle = self.turn_direction()
+        time.sleep(2)
+        self.stop()
+        time.sleep(.5)
+        self.steering_angle = 90
+        self.drive(self._speed, 1)
+
+
 
 class SonicCar(BaseCar):
 
     def __init__(self):
         super().__init__()
-        self._distance = 0
 
     @property
     def distance(self):
-        self._distance = self.usm.distance()
-        return self._distance
+        return self.usm.distance()
 
 class SensorCar(SonicCar):
 
     def __init__(self):
         super().__init__()
-        self._ir_values = []
+        self.df = log.init_dataframe()
 
-    def get_average(self, mount: int = 10):
+    def drive(self, speed: int, direction: int):
+        super().drive(speed, direction)
+        self.log()
+    
+    @property
+    def steering_angle(self):
+        #return BaseCar.steering_angle.fget(self)
+        return super().steering_angle
+
+    @steering_angle.setter
+    def steering_angle(self, angle):
+        super(SensorCar, self.__class__).steering_angle.fset(self,angle)
+        self.log()
+
+    def stop(self):
+        super().stop()
+        self.log()
+
+    def get_average(self):
         """Returns the mean value of the measurements.
-
         Args:
             mount (int): Number of measurements taken. Defaults to 10.
-
         Returns:
             [float]: List of measurement as mean of 'mount' individual measurements.
         """
-        return self.irm.get_average(mount)
+        return self.irm.get_average(50)
 
     def cali_references(self) -> None:
         """Recording the reference
         """
         self.irm.cali_references()
     
+    @property
     def read_analog(self) -> list:
         """Reads the value of the infrared module as analog.
-
         Returns:
             [list]: List of bytes of the measurement of each sensor read in as analog values. 
         """
         return self.irm.read_analog()
 
-
-def avoid_crash(car, speed):
-    car.stop()
-    time.sleep(.5)
-    car.drive(speed,-1)
-    time.sleep(1)
-    car.steering_angle = car.turn_direction()
-    car.drive(speed, -1)
-    time.sleep(2)
-    car.stop()
-    car.steering_angle = 90
-    car.drive(speed, 1)
+    def log(self):
+        log.add_row_df(self.df, self.distance, self.read_analog , self._speed, self._direction, self._steering_angle)
 
 
-#@click.command()
-#@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
+
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
 
@@ -163,9 +180,6 @@ def main(modus, car: SensorCar):
     Args:
         modus (int): The mode that can be choosen by the user
     """
-
-    
-
     print('------ Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
@@ -248,22 +262,24 @@ def main(modus, car: SensorCar):
             car.drive(40,1)
             while distance > 7 or distance < 0:
                 distance = car.distance
+                car.log()
                 print(distance)
-                time.sleep(.1)
+                time.sleep(.3)
             car.stop()
 
         elif modus == 4:
             print(modi[modus])
             loop_count = 0
-            while loop_count < 5:
+            while loop_count < 2:
                 car.steering_angle = 90
                 car.drive(40,1)
                 distance = car.distance
                 while distance > 12 or distance < 0:
                     distance = car.distance
-                    print(distance)
-                    time.sleep(.1)
-                avoid_crash(car, 40)
+                    print(f"{distance} , {car.steering_angle}")
+                    car.log()
+                    time.sleep(.3)
+                car.avoid_crash()
                 loop_count += 1
             car.stop()
         
@@ -350,8 +366,10 @@ def main(modus, car: SensorCar):
 if __name__ == '__main__':
     
     car = SensorCar()
-    log.makedatabase(f"{sys.path[0]}/logdata.sqlite")
 
+    # Datenbank anlegen und Dataframe initialisieren
+    db_path = f"{sys.path[0]}/logdata.sqlite"
+    log.makedatabase_singletable(db_path)
     try:
         modus = sys.argv[1]
     except:
@@ -359,4 +377,8 @@ if __name__ == '__main__':
 
     main(modus, car)
     car.stop()
+    car.usm.stop()
+    conn = log.create_connection(db_path)
+    car.df.to_sql('drivedata', conn, if_exists='append', index = False)  
+    print(car.df)
 
