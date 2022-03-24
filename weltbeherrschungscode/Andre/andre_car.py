@@ -79,7 +79,7 @@ class SonicCar(BaseCar):
     
     @property
     def distance(self):
-        self._distance = usm.distance()
+        self._distance = self.usm.distance()
         return self._distance
     
 
@@ -128,16 +128,12 @@ def parc3():
     car = SonicCar()
     print('erste Abstandsmessung: {}cm'.format(car.distance))
     distance = car.distance
-    car.drive(20,1)
+    car.drive(40,1)
     while distance > 7 or distance < 0:
         distance = car.distance
         print("Abstand zum Hindernis", distance)
-        #log.add_usm(db_w_path, distance)
         print("Geschwindigkeit:", car.speed)
         print("Fahrrichtung:", car.direction)
-        #log.add_driving(db_w_path, car.speed, car.direction)
-        print("Lenkwinkel:", car.steering_angle)
-        #log.add_steering(db_w_path, car.steering_angle)
         print(20*"--")
         time.sleep(.1)
     car.stop()
