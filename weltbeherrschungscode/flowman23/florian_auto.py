@@ -108,6 +108,14 @@ def print_data(distance, speed, direction, steering_angle):
     print("Geschwindigkeit:", speed)
     print("Fahrrichtung:", "vorwärts" if direction == 1 else "rückwärts")
     print("Lenkwinkel:", steering_angle)
+    print(20*"--")
+
+
+"""def write_log(car):
+    distance = car.distance
+    speed = car.speed
+    direction = car.direction
+    steering_angle = car.steering_angle"""
 
 
 def main(modus, car: SonicCar):
@@ -171,6 +179,7 @@ def main(modus, car: SonicCar):
             car.steering_angle = 90
 
         elif modus == 3:
+            print(modi[modus])
             car.drive(20,1)
             distance = car.distance
             while distance > 7 or distance < 0:
@@ -181,7 +190,6 @@ def main(modus, car: SonicCar):
                 print_data(distance, speed, direction, steering_angle)
                 #write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle)
                 log.add_row_df(flo_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
-                print(20*"--")
                 time.sleep(.3)
             car.stop()
             print("Auto angehalten")
@@ -192,9 +200,56 @@ def main(modus, car: SonicCar):
 
         elif modus == 4:
             print(modi[modus])
-        
-            #car.drive(20, -1)
-            #while car.distance < 20:
+            
+            i=0
+            while i < 2:
+                print(i)
+                print("Los geht's")
+                car.drive(20,1)
+                distance = car.distance
+                while distance > 7 or distance < 0:
+                    distance = car.distance
+                    speed = car.speed
+                    direction = car.direction
+                    steering_angle = car.steering_angle
+                    print_data(distance, speed, direction, steering_angle)
+                    log.add_row_df(flo_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+                    time.sleep(.5)
+                car.stop()
+                print("Auto angehalten")
+                time.sleep(1.0)
+
+                car.drive(20, -1)
+                print("Retour")
+                while distance < 20:
+                    distance = car.distance
+                    speed = car.speed
+                    direction = car.direction
+                    steering_angle = car.steering_angle
+                    print_data(distance, speed, direction, steering_angle)
+                    log.add_row_df(flo_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+                    time.sleep(.5)
+                car.stop()
+                print("Auto angehalten")
+                time.sleep(1.0)
+
+                car.steering_angle = 70
+                print("links lenken")
+                time.sleep(.5)
+                i += 1
+
+            car.steering_angle = 90 # Räder gerade stellen
+            car.stop()              # Auto anhalten
+            car.usm.stop()          # Sensor ausschalten
+
+
+            # PandasDataFrame Daten anzeigen und schreiben
+            print(flo_pdf)
+            conn = log.create_connection(db_single_w_path)
+            flo_pdf.to_sql('drivedata', conn, if_exists='append', index = False)            
+            
+
+
 
         elif modus == 5:
             print(modi[modus])

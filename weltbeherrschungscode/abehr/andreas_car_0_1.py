@@ -91,23 +91,26 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
-class Fahrdaten():
 
-    def __init__(self) -> None:
-        self.speed = 0
+    
 
+def print_data(distance, speed, direction, steering_angle):
+    print("Abstand zum Hindernis", distance)
+    print("Geschwindigkeit:", speed)
+    print("Fahrrichtung:", "vorwärts" if direction == 1 else "rückwärts")
+    print("Lenkwinkel:", steering_angle)
 
-def main(modus):
-    """Main Function for Executing the tasks
+def main(modus, car:SonicCar):
+    
+    #db_multi_w_path = f"{sys.path[0]}/andreas_db_multi.sqlite"
+    db_single_w_path = f"{sys.path[0]}/andreas_db_single.sqlite"
+    #log.makedatabase_multitable(db_multi_w_path)
+    log.makedatabase_singletable(db_single_w_path)
+    andreas_pdf = log.init_dataframe()
 
-
-    Args:
-        modus (int): The mode that can be choosen by the user
-    """
-
-    car = SonicCar()
-    log.makedatabase_multitable(db_path)
-    log.makedatabase_singletable(db_path)
+    #car = SonicCar()
+    #log.makedatabase_multitable(db_path)
+    #log.makedatabase_singletable(db_single_w_path)
 
     print('-- Fahrparcours --------------------')
     modi = {
@@ -168,19 +171,21 @@ def main(modus):
             car.drive(40,1)
             while distance > 7 or distance < 0:
                 distance = car.distance
-                if distance < 15:
-                    car.drive(30,1)
-                else:
-                    car.drive(50,1)
-                log.add_driving(db_path, car.speed, car.direction)
-                log.add_usm(db_path,distance)
-                log.add_steering(db_path,car.steering_angle)
-                log.add_data(db_path,car.distance,0, car.speed, car.direction, car.steering_angle)
-                print(distance)
-                time.sleep(.1)
+                speed = car.speed
+                direction = car.direction
+                steering_angle = car.steering_angle
+                print_data(distance, speed, direction, steering_angle)
+                #write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle)
+                log.add_row_df(andreas_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+                print(20*"--")
+                time.sleep(.3)
             car.stop()
-            time.sleep(.1)
-            log.add_driving(db_path, car.speed, car.direction)
+            print("Auto angehalten")
+            print(andreas_pdf)
+            conn = log.create_connection(db_single_w_path)
+            andreas_pdf.to_sql('drivedata', conn, if_exists='append', index = False)            
+            car.usm.stop() # Sensor ausschalten
+
             #Schleife mit USM Distance
             """freigabe = car.distance
             print(freigabe)
@@ -216,10 +221,12 @@ def main(modus):
 
 if __name__ == '__main__':
     
+    car = SonicCar()
     try:
         modus = sys.argv[1]
     except:
         modus = None
 
-    main(modus)
-
+    main(modus, car)
+    #print(car.usm.timeout)
+    car.usm.stop()

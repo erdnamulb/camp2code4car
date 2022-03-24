@@ -165,6 +165,7 @@ def main(modus, car: SensorCar):
     """
 
     
+    df = log.init_dataframe()
 
     print('------ Fahrparcours --------------------')
     modi = {
@@ -248,9 +249,14 @@ def main(modus, car: SensorCar):
             car.drive(40,1)
             while distance > 7 or distance < 0:
                 distance = car.distance
+                speed = car.speed
+                direction = car.direction
+                steering_angle = car.steering_angle
+                df = log.add_row_df(df, distance, [0,0,0,0,0], speed, direction, steering_angle)
                 print(distance)
                 time.sleep(.1)
             car.stop()
+            print(df)
 
         elif modus == 4:
             print(modi[modus])
@@ -350,7 +356,7 @@ def main(modus, car: SensorCar):
 if __name__ == '__main__':
     
     car = SensorCar()
-    log.makedatabase(f"{sys.path[0]}/logdata.sqlite")
+    #log.makedatabase(f"{sys.path[0]}/logdata.sqlite")
 
     try:
         modus = sys.argv[1]

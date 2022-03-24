@@ -1,5 +1,6 @@
 import sys
 import os
+from turtle import distance, speed
 import loggingc2c as log
 
 
@@ -19,13 +20,13 @@ from basisklassen import *
 class BaseCar():
 
     """Entwicklung und Testen einer Klasse BaseCar mittels der Basisklassen
-        mit vorgegebenen Anforderungen. Die Klasse soll folgende Attribute (mit entsprechen‑
+        mit vorgegebenen Anforderungen. Die Klasse soll folgende Attribute (mit entsprechen-
         den Gettern und Settern) und Methoden haben:
         • steering_angle: Zugriff auf den Lenkwinkel
         • drive(int, int): Fahren mit übergebener Geschwindigkeit und Fahrrichtung
         • stop(): Anhalten des Autos
         • speed: Zugriff auf die Geschwindigkeit
-        • direction: Zugriff auf die Fahrrichtung (1: vorwärts, 0: Stillstand, ‑1 Rückwärts)
+        • direction: Zugriff auf die Fahrrichtung (1: vorwärts, 0: Stillstand, -1 Rückwärts)
         Die Klasse BaseCar soll mittels folgenden Aufgaben getestet werden."""
 
     def __init__(self):
@@ -92,6 +93,10 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
+    #def datalogger():
+        #df_log = log.add_row_df(df_db, self.distance, [0, 0, 0, 0, 0], self.speed, self.direction, self.steering_angle)
+
+
 
 
 
@@ -108,10 +113,26 @@ def main(modus):
     car = BaseCar()
     scar = SonicCar()
 
-    db_w_path = f"{sys.path[0]}/JM.sqlite" #Pfadrückgabe: /home/pi/git/camp2code4car/weltbeherrschungscode/JM112/JM.sqlite
-    log.makedatabase_multitable(db_w_path)
+    #db_w_path = f"{sys.path[0]}/JM.sqlite" #Pfadrückgabe: /home/pi/git/camp2code4car/weltbeherrschungscode/JM112/JM.sqlite
+    #log.makedatabase_multitable(db_w_path)
+
+    #DB singletable anlegen
     db_w_path_single = f"{sys.path[0]}/JMsingle.sqlite"
-    log.makedatabase_singletable(db_w_path_single) 
+    log.makedatabase_singletable(db_w_path_single)
+
+    #Pandas Dataframe
+    df_db = log.init_dataframe()
+
+    def f_vorwärts():
+        while True:
+            if scar.distance >= 12 or scar.distance < 0:
+                pass
+            else:
+                scar.stop()
+                print("Hindernis")
+                break
+        
+
 
 
     print('-- Auswahl Fahrparcours --------------------')
@@ -189,30 +210,49 @@ def main(modus):
         while True:
             if scar.distance >= 7 or scar.distance < 0:
                 db_distance = scar.distance
-                print("Abstand zum Hindernis", db_distance) 
-                log.add_usm(db_w_path, scar.distance)
                 db_speed = scar.speed
-                print("Geschwindigkeit:", db_speed)
                 db_direction = scar.speed
-                print("Fahrrichtung:", db_direction)
-                log.add_driving(db_w_path, db_speed, db_direction)
                 db_steering_angle = scar.steering_angle
-                print("Lenkwinkel:", db_steering_angle)
-                log.add_steering(db_w_path, db_steering_angle)
-                print(20*"--")
-                log.add_data(db_w_path_single,db_distance, 0, db_speed, db_direction, db_steering_angle)
+                #log.add_data(db_w_path_single,db_distance, 0, 0, 0, 0, 0, db_speed, db_direction, db_steering_angle)
+                df_db = log.add_row_df(df_db, db_distance, [0, 0, 0, 0, 0], db_speed, db_direction, db_steering_angle)
+                print(df_db)
+                print("-" * 20)
                 time.sleep(0.5)
             else:
                 scar.stop()
                 print("Hindernis")
+                conn = log.create_connection(db_w_path_single)
+                df_db.to_sql('drivedata', conn, if_exists = 'append', index = False)
                 break
+        print(df_db)
 
-    elif modus == 4:
-        print('Test Infrared')
-        pass
-    
-    elif modus == 5:
-        pass
+    elif modus == 4: #Leider ohne coolen Datenlogger :(
+        print('Erkundungstour')
+        i = 0
+        while i <= 3:
+            scar.drive(30, 1)
+            if scar.distance >= 12 or scar.distance < 0:
+                df_db = log.add_row_df(df_db, scar.distance, [0, 0, 0, 0, 0], scar.speed, scar.direction, scar.steering_angle)
+                time.sleep(0.5)
+                print("if1")
+            else:
+                scar.stop()
+                print("Hindernis")
+                df_db = log.add_row_df(df_db, scar.distance, [0, 0, 0, 0, 0], scar.speed, scar.direction, scar.steering_angle)
+                car.steering_angle = 55
+                while scar.distance < 250:
+                    scar.drive(25, -1)
+                    df_db = log.add_row_df(df_db, scar.distance, [0, 0, 0, 0, 0], scar.speed, scar.direction, scar.steering_angle)
+                    time.sleep(0.5)
+                i += 1
+        scar.stop()
+        print("Erkundungstour beendet")
+        conn = log.create_connection(db_w_path_single)
+        df_db.to_sql('drivedata', conn, if_exists = 'append', index = False)
+        print("Daten in DB")
+
+
+
 
 
 if __name__ == '__main__':
