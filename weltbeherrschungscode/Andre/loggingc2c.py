@@ -45,7 +45,7 @@ def add_row_df(df_name, dist, irval, speed, dir, ang):
     ir5 = irval[4]
     i = df_name.index.size
     time = str(dt.datetime.timestamp(dt.datetime.now()))
-    df_name.loc[i+1] = (time , dist , ir1, ir2, ir3, ir4, ir5 , speed , dir , ang)
+    df_name.loc[i] = (time , dist , ir1, ir2, ir3, ir4, ir5 , speed , dir , ang)
     return df_name
 
 
@@ -118,7 +118,11 @@ def makedatabase_singletable(name: str):
             Erfasst werden 
             timestamp,
             distance,
-            irvalue,
+            ir1,
+            ir2,
+            ir3,
+            ir4,
+            ir5,
             speed,
             direction,
             angle'''
@@ -130,7 +134,11 @@ def makedatabase_singletable(name: str):
                 id INTEGER
                 , timestamp VARCHAR(20)
                 , distance INTEGER
-                , irvalue INTEGER
+                , ir1 INTEGER
+                , ir2 INTEGER
+                , ir3 INTEGER
+                , ir4 INTEGER
+                , ir5 INTEGER
                 , speed INTEGER
                 , direction INTEGER
                 , angle INTEGER
@@ -254,13 +262,18 @@ def read_all(name):
 def add_data(name, valuedist, valueir, valuespd, valuedir, valueang):
     '''Hinzufügen von Datensatz mit Zeitstempel (wird automatisch generiert) zum Zeitpunkt des Schreibens.
         Reihenfolge: Datenbankname, Ultraschall, Infrarot, Geschwindigkeit, Direcition, Lenkwinkel'''
+    ir1 = valueir[0]
+    ir2 = valueir[1]
+    ir3 = valueir[2]
+    ir4 = valueir[3]
+    ir5 = valueir[4]
     time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
     db.execute("""
         INSERT INTO drivedata 
-            (timestamp, distance, irvalue, speed, direction, angle)
+            (timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle)
         VALUES 
-            (?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir, valuespd, valuedir, valueang))
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir, valuespd, valuedir, valueang))
     db.commit()
     db.close()
 
