@@ -13,6 +13,8 @@ pfad_db_multi = f"{sys.path[0]}/AllanDBmulti.sqlite"
 db.makedatabase_singletable(f"{sys.path[0]}/AllanDBsingle.sqlite")
 pfad_db_single = f"{sys.path[0]}/AllanDBsingle.sqlite"
 
+df = db.init_dataframe()
+
 
 class BaseCar():
 
@@ -206,12 +208,9 @@ def main(modus):
                     distance = Sonic.distance
                     time.sleep(.1)
                     print("Entferneung zum nächsten Hindernis:", distance, "cm")
-                    db.add_usm(pfad_db_multi, distance)
+                    db.add_row_df(df, distance, [0, 0, 0, 0, 0], car.speed, car.direction, car.steering_angle)
                     print("Aktuelle Geschwindigkeit:", car.speed, "cm/sek")
-                    db.add_driving(pfad_db_multi, car.speed, car.direction)
                     print("Aktueller Lenkeinschlag:", car.steering_angle)
-                    db.add_steering(pfad_db_multi, car.steering_angle)
-                    db.add_data(pfad_db_single, distance, 0, car.speed, car.direction, car.steering_angle)
                 car.stop()
                 hindernisumfahren()
                 x = input("Soll weitergefahren werden? ja/nein: (j/n) ")
@@ -220,6 +219,7 @@ def main(modus):
             print('Abruch.')
 
         car.usm.stop
+        print(df)
 
 
 if __name__ == '__main__':
