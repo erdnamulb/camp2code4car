@@ -95,13 +95,13 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
-def write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle):
+"""def write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle):
     log.add_usm(db_multi_w_path, distance)
     log.add_driving(db_multi_w_path, speed, direction)                           
     log.add_steering(db_multi_w_path, steering_angle)                           
-    log.add_data(db_single_w_path, distance, 0, speed, direction, steering_angle)
+    log.add_data(db_single_w_path, distance, 0, 0, 0, 0, 0, speed, direction, steering_angle)
     print("data logged")
-
+"""
 
 def print_data(distance, speed, direction, steering_angle):
     print("Abstand zum Hindernis", distance)
@@ -111,10 +111,11 @@ def print_data(distance, speed, direction, steering_angle):
 
 
 def main(modus, car: SonicCar):
-    db_multi_w_path = f"{sys.path[0]}/flodb_multi.sqlite"
-    db_single_w_path = f"{sys.path[0]}/flodb_single.sqlite"
-    log.makedatabase_multitable(db_multi_w_path)
+    #db_multi_w_path = f"{sys.path[0]}/flo_db_multi.sqlite"
+    db_single_w_path = f"{sys.path[0]}/flo_db_single.sqlite"
+    #log.makedatabase_multitable(db_multi_w_path)
     log.makedatabase_singletable(db_single_w_path)
+    flo_pdf = log.init_dataframe()
 
     print('------ Fahrparcours --------------------')
     modi = {
@@ -171,24 +172,30 @@ def main(modus, car: SonicCar):
 
         elif modus == 3:
             car.drive(20,1)
-            while car.distance > 7 or car.distance < 0:
+            distance = car.distance
+            while distance > 7 or distance < 0:
                 distance = car.distance
                 speed = car.speed
                 direction = car.direction
                 steering_angle = car.steering_angle
                 print_data(distance, speed, direction, steering_angle)
-                write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle)
+                #write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle)
+                log.add_row_df(flo_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
                 print(20*"--")
                 time.sleep(.3)
             car.stop()
-            #print("Auto angehalten")
-            #car.drive(20, -1)
-            #while car.distance < 20:
+            print("Auto angehalten")
+            print(flo_pdf)
+            conn = log.create_connection(db_single_w_path)
+            flo_pdf.to_sql('drivedata', conn, if_exists='append', index = False)            
             car.usm.stop() # Sensor ausschalten
 
         elif modus == 4:
             print(modi[modus])
         
+            #car.drive(20, -1)
+            #while car.distance < 20:
+
         elif modus == 5:
             print(modi[modus])
         
