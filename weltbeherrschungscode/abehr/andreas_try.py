@@ -109,7 +109,9 @@ class SonicCar(BaseCar):
             speed (int, optional): Speed at which to drive. Defaults to 40.
         """
         print('Start')
-        for a in angles:
+        i = 0
+        while i < 3:
+            print ("Durchlauf {}", i)
             distance = self.distance
             self.drive(40,1)
             #auto fährt
@@ -148,11 +150,12 @@ class SonicCar(BaseCar):
             print_data(distance, speed, direction, steering_angle)
             log.add_row_df(andreas_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
             print(20*"--")
-           
+            
             conn = log.create_connection(db_single_w_path)
             andreas_pdf.to_sql('drivedata', conn, if_exists='append', index = False)            
             car.usm.stop() # Sensor ausschalten               
-            self.stop()                
+            self.stop()  
+            i += 1              
         print('Ende')
 
 
