@@ -3,6 +3,7 @@ from turtle import speed
 import click
 import datetime as dt
 import os
+ 
 
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/Code')
 from basisklassen import *
@@ -10,7 +11,7 @@ sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/
 import loggingc2c as db 
 
 
-db.makedatabase(f"{sys.path[0]}/AllanDB.db")
+db.makedatabase(f"{sys.path[0]}/AllanDB.sqlite")
 pfad_db = f"{sys.path[0]}/AllanDB.db"
 
 class BaseCar():
