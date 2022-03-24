@@ -113,7 +113,11 @@ def makedatabase_singletable(name: str):
             Erfasst werden 
             timestamp,
             distance,
-            irvalue,
+            irvalue1,
+            irvalue2,
+            irvalue3,
+            irvalue4,
+            irvalue5,
             speed,
             direction,
             angle'''
@@ -125,7 +129,11 @@ def makedatabase_singletable(name: str):
                 id INTEGER
                 , timestamp VARCHAR(20)
                 , distance INTEGER
-                , irvalue INTEGER
+                , ir1 INTEGER
+                , ir2 INTEGER
+                , ir3 INTEGER
+                , ir4 INTEGER
+                , ir5 INTEGER
                 , speed INTEGER
                 , direction INTEGER
                 , angle INTEGER
@@ -137,15 +145,15 @@ def makedatabase_singletable(name: str):
     except:
         print('Datenbank existiert schon.')
 
-def add_data(name, value1, value2, value3, value4, value5):
+def add_data(name, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5 ,valuespd, valuedct, valueangl):
     '''Hinzufügen von Werten für die Multidatenbank'''
     db = create_connection(name)
     time = str(dt.datetime.timestamp(dt.datetime.now()))
     db.execute("""
         INSERT INTO drivedata
-            (timestamp, distance, irvalue, speed, direction, angle)
+            (timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle)
         VALUES 
-            (?, ?, ?, ?, ?, ?); """,(time, value1, value2, value3, value4, value5))
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?); """,(time, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5 ,valuespd, valuedct, valueangl))
     db.commit()
     db.close()
 
