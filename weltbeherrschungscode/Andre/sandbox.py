@@ -22,3 +22,5 @@ log.add_row_df(the_frame, 7, [8,8,8,8,8], 25, 6, 5)
 log.add_row_df(the_frame, 11, [10,10,10,10,10], 35, 7, 5)
 print(the_frame)
 
+
+
