@@ -144,7 +144,7 @@ class SensorCar(SonicCar):
     def __init__(self):
         super().__init__()
         self.irm = Infrared()
-        # Setup DataFrame and DataBaseDatenbank anlegen und Dataframe initialisieren
+        # Setup DataFrame and DataBase
         self.df = log.init_dataframe()
         self._db_path = f"{sys.path[0]}/logdata.sqlite"
         log.makedatabase_singletable(self._db_path)
