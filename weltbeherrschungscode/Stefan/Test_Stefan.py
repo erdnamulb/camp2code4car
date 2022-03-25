@@ -1,176 +1,10 @@
-from datetime import datetime
 import sys, os
+sys.path.append(os.path.dirname(sys.path[0]))
+from auto_code import SensorCar
+import time
 
+from datetime import datetime
 import numpy as np
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
-from basisklassen import *
-import loggingc2c as log
-
-import traceback
-
-
-class BaseCar():
-
-    def __init__(self):
-        self._steering_angle = 90
-        self._speed = 0
-        self._direction = 0
-        self._bool_turn = True
-        
-        try:
-            path= os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code')
-            with open(path +"/config.json", "r") as f:
-                data = json.load(f)
-                turning_offset = data["turning_offset"]
-                forward_A = data["forward_A"]
-                forward_B = data["forward_B"]
-                print("Turning Offset: ", turning_offset)
-                print("Forward A: ", forward_A)
-                print("Forward B: ", forward_B)
-        except:
-            print("config.json nicht gefunden")
-            turning_offset = 0
-            forward_A = 0
-            forward_B = 0
-
-        self.bw = Back_Wheels(forward_A=forward_A, forward_B=forward_B)
-        self.fw = Front_Wheels(turning_offset=turning_offset)
-        self.usm = Ultrasonic()
-        self.irm = Infrared()
-        self.bw.stop()
-
-    @property
-    def speed(self):
-        return self._speed
-
-    @property
-    def direction(self):
-        return self._direction
-
-    @property
-    def steering_angle(self):
-        return self._steering_angle
-
-    @steering_angle.setter
-    def steering_angle(self, angle):
-        self._steering_angle = angle
-        self.fw.turn(angle)
-
-    def stop(self):
-        self._direction = 0
-        self.bw.stop()
-
-    def drive(self, speed: int, direction: int):
-        self._direction = direction
-        if direction == 1: #vorwärts
-            self._direction = 1
-            self.bw.forward()
-        elif direction == -1: #rückwärts
-            self._direction = -1
-            self.bw.backward()
-        else: # alles andere = stop
-            self._direction = 0
-            self.stop()
-
-        self._speed = speed
-        self.bw.speed = speed
-    
-    def wait_angle(self,  waitTime: float, angle: int):
-        now = 0
-        while now < waitTime:
-            self.steering_angle = angle
-            time.sleep(.25)
-            
-            if angle > 90:
-                offset = -5
-            else:
-                offset = 5
-            self.steering_angle = angle + offset
-            time.sleep(.25)
-
-            now += .5
-            print(f"time= {now:.1f} set_angle = {angle}")
-    
-    def turn_direction(self):
-        if self._bool_turn:
-            angle = 45
-        else:
-            angle = 135
-        self._bool_turn = not self._bool_turn
-        return angle
-
-    def avoid_crash(self):
-        self.stop()
-        time.sleep(.5)
-        self.drive(self._speed,-1)
-        time.sleep(1)
-        self.steering_angle = self.turn_direction()
-        time.sleep(2)
-        self.stop()
-        time.sleep(.5)
-        self.steering_angle = 90
-        self.drive(self._speed, 1)
-
-
-
-class SonicCar(BaseCar):
-
-    def __init__(self):
-        super().__init__()
-
-    @property
-    def distance(self):
-        return self.usm.distance()
-
-class SensorCar(SonicCar):
-
-    def __init__(self):
-        super().__init__()
-        self.df = log.init_dataframe()
-
-    def drive(self, speed: int, direction: int):
-        super().drive(speed, direction)
-        self.log()
-    
-    @property
-    def steering_angle(self):
-        #return BaseCar.steering_angle.fget(self)
-        return super().steering_angle
-
-    @steering_angle.setter
-    def steering_angle(self, angle):
-        super(SensorCar, self.__class__).steering_angle.fset(self,angle)
-        self.log()
-
-    def stop(self):
-        super().stop()
-        self.log()
-
-    def get_average(self):
-        """Returns the mean value of the measurements.
-        Args:
-            mount (int): Number of measurements taken. Defaults to 10.
-        Returns:
-            [float]: List of measurement as mean of 'mount' individual measurements.
-        """
-        return self.irm.get_average(50)
-
-    def cali_references(self) -> None:
-        """Recording the reference
-        """
-        self.irm.cali_references()
-    
-    @property
-    def read_analog(self) -> list:
-        """Reads the value of the infrared module as analog.
-        Returns:
-            [list]: List of bytes of the measurement of each sensor read in as analog values. 
-        """
-        return self.irm.read_analog()
-
-    def log(self):
-        log.add_row_df(self.df, self.distance, self.read_analog , self.speed, self.direction, self.steering_angle)
-
 
 
 def main(modus, car: SensorCar):
@@ -364,12 +198,9 @@ def main(modus, car: SensorCar):
         break
 
 if __name__ == '__main__':
-    
+    # car anlegen
     car = SensorCar()
 
-    # Datenbank anlegen und Dataframe initialisieren
-    db_path = f"{sys.path[0]}/logdata.sqlite"
-    log.makedatabase_singletable(db_path)
     try:
         modus = sys.argv[1]
     except:
@@ -378,7 +209,7 @@ if __name__ == '__main__':
     main(modus, car)
     car.stop()
     car.usm.stop()
-    conn = log.create_connection(db_path)
-    car.df.to_sql('drivedata', conn, if_exists='append', index = False)  
+    # Dataframe in DB schreiben
+    car.write_log_to_db()
     print(car.df)
 
