@@ -6,13 +6,13 @@ import pandas as pd
 # Dataframe Handling:
 
 def init_dataframe():
-    '''Dataframe df_name initial erzeugen und mit '0' in erster Zeile befüllen. 
-    
-    Returns
-    -------
-    df_name
-        dataframe df_name mit Spalten (10): timestamp, distance, irvalues 1-5, speed, direction, angle
-    '''
+    """Dataframe df_name initial erzeugen und mit '0' in erster Zeile befüllen.
+        Beispiel: my_dataframe = init_dataframe()
+
+    Returns:
+        df_name: dataframe Objekt mit Spalten (10): 
+        timestamp, distance, irvalues 1-5, speed, direction, angle
+    """    
 
     data = {'timestamp':  [0],
         'distance': [0],
@@ -30,14 +30,20 @@ def init_dataframe():
 
 
 def add_row_df(df_name, dist, irval, speed, dir, ang):
-    '''Dataframe df_name um eine Zeile mit den übergebenen Werten erweitern. 
-    Spalten: timestamp, distance, irvalues (Liste aus 5 Elementen), speed, direction, angle
+    """Hängt ans Ende von Dataframe df_name eine Zeile mit den übergebenen Werten (Args) an.
 
-    Returns
-    -------
-    df_name
-        dataframe df_name mit neuen Werten in zusätzlicher Zeile.
-    '''
+    Args:
+        df_name (string): Name des Dataframe
+        dist (int): Ultraschall Abstandswert 
+        irval (list): Infrarot Sensorwerte (Liste aus 5 Elementen (int))
+        speed (int): Setzwert Geschwindigkeit 
+        dir (int): Setzwert Richtung 
+        ang (int): Setzwert Lenkwinkel
+
+    Returns:
+        df_name: Aktualisiertes Dataframe Objekt
+    """    
+    
     ir1 = irval[0]
     ir2 = irval[1]
     ir3 = irval[2]
@@ -49,79 +55,48 @@ def add_row_df(df_name, dist, irval, speed, dir, ang):
     return df_name
 
 
+# Datenbank Verbindung herstellen:
+
 def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by the db_file
-    :param db_file: database file
-    :return: Connection object or None
+    """Erstellt ein Verbindungsobjekt zur SQLite Datenbank db_file.
+        Beispiel: my_conn = create_connection('db_file')
+
+    Args:
+        db_file (string): database file
+
+    Returns:
+        _type_: Connection object oder None
     """
+    
     conn = None
     try:
         conn = sqlite3.connect(db_file)
-        #print("connection success")
+        print("connection success")
     except Error as e:
         print(e)
 
     return conn
 
 
-# Funktionen zum Anlegen von Datenbanken:
-
-def makedatabase_multitable(name: str):
-    '''Anlegen einer Datenbank mit den Tabellen
-        ultrasonic
-        infrared
-        driving
-        steering'''
-    try:
-        db = sqlite3.connect(name)
-
-        db.execute("""
-            CREATE TABLE ultrasonic (
-                id INTEGER
-                , timestamp VARCHAR(20)
-                , distance INTEGER
-                , PRIMARY KEY(id))""")
-
-        db.execute("""
-            CREATE TABLE infrared (
-                id INTEGER
-                , timestamp VARCHAR(20)
-                , value INTEGER
-                , PRIMARY KEY(id))""")
-
-        db.execute("""
-            CREATE TABLE driving (
-                id INTEGER
-                , timestamp VARCHAR(20)
-                , speed INTEGER
-                , direction INTEGER
-                , PRIMARY KEY(id))""")
-
-        db.execute("""
-            CREATE TABLE steering (
-                id INTEGER
-                , timestamp VARCHAR(20)
-                , angle INTEGER
-                , PRIMARY KEY(id))""")            
-        
-        db.commit()
-        db.close()
-        print("Datenbank erstellt.")
-    except:
-        print('Datenbank existiert schon.')
-
+# Funktionen zum Anlegen der Datenbank:
 
 def makedatabase_singletable(name: str):
-    '''Anlegen einer Datenbank mit der Tabelle
-        drivedata  
-            Erfasst werden 
-            timestamp,
-            distance,
-            ir1-5,
-            speed,
-            direction,
-            angle'''
+    """Anlegen einer Datenbank mit der Tabelle 'drivedata' (voreingestellt) mit den Spalten:
+        timestamp,
+        distance,
+        ir1,
+        ir2,
+        ir3,
+        ir4,
+        ir5,
+        speed,
+        direction,
+        angle
+
+    Args:
+        name (str): Name der Datenbank (z.B. 'mydatabase.sql')
+    """    
+
     try:
         db = sqlite3.connect(name)
 
@@ -147,131 +122,44 @@ def makedatabase_singletable(name: str):
         print('Datenbank existiert schon.')
 
 
-# Funktionen für Multitable-Datenbank:
+# Funktionen für Schreiben und Lesen der Datenbank:
 
-def add_usm(name, value):
-    '''Hinzufügen von Werten aus Ultraschallsensor 
-        mit Zeitstempel zum Zeitpunkt des Schreibens'''
-    time = str(dt.datetime.timestamp(dt.datetime.now()))
-    db = create_connection(name)
-    db.execute("""
-        INSERT INTO ultrasonic 
-            (timestamp, distance)
-        VALUES 
-            (?, ?);""",(time, value))
-    db.commit()
-    db.close()
+def add_data(name, valuedist, valueir, valuespd, valuedir, valueang):
+    """Hinzufügen zu Tabelle 'drivedata' (fest definiert) von Datensatz mit Zeitstempel (wird automatisch generiert) zum Zeitpunkt des Schreibens.
+        Reihenfolge: Datenbankname, Ultraschall, Infrarot (Liste mit 5 Elementen), Geschwindigkeit, Direcition, Lenkwinkel
 
-
-def add_driving(name, value1, value2):
-    '''Hinzufügen von Geschwindigkeitswerten 
-        mit Zeitstempel zum Zeitpunkt des Schreibens'''
-    time = str(dt.datetime.timestamp(dt.datetime.now()))
-    db = create_connection(name)
-    db.execute("""
-        INSERT INTO driving 
-            (timestamp, speed, direction)
-        VALUES 
-            (?, ?, ?);""",(time, value1, value2))
-    db.commit()
-    db.close()
-
-
-def add_steering(name, value):
-    '''Hinzufügen von Werten aus Ultraschallsensor 
-        mit Zeitstempel zum Zeitpunkt des Schreibens'''
-    time = str(dt.datetime.timestamp(dt.datetime.now()))
-    db = create_connection(name)
-    db.execute("""
-        INSERT INTO steering 
-            (timestamp, angle)
-        VALUES 
-            (?, ?);""",(time, value))
-    db.commit()
-    db.close()
-
-
-def read_steering(name):
-    db = create_connection(name)
-    cur = db.cursor()
-    cur.execute("SELECT * FROM steering")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-    db.close()
-
-
-def read_driving(name):
-    db = create_connection(name)
-    cur = db.cursor()
-    cur.execute("SELECT * FROM driving")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-    db.close()
-
-
-def read_usm(name):
-    db = create_connection(name)
-    cur = db.cursor()
-    cur.execute("SELECT * FROM ultrasonic")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-    db.close()
-
-
-def read_infrared(name):
-    db = create_connection(name)
-    cur = db.cursor()
-    cur.execute("SELECT * FROM infrared")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-    db.close()
-
-
-def read_all(name):
-    db = create_connection(name)
-    cur = db.cursor()
-    cur.execute("SELECT * FROM ultrasonic")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-        cur.execute("SELECT * FROM driving")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-        cur.execute("SELECT * FROM steering")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-        cur.execute("SELECT * FROM infrared")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-    db.close()
-
-
-# Funktionen für Singletable Datenbank:
-
-def add_data(name, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang):
-    '''Hinzufügen von Datensatz mit Zeitstempel (wird automatisch generiert) zum Zeitpunkt des Schreibens.
-        Reihenfolge: Datenbankname, Ultraschall, Infrarot, Geschwindigkeit, Direcition, Lenkwinkel'''
+    Args:
+        name (string): Datenbankname
+        valuedist (_type_): Ultraschall Abstandswert (int)
+        valueir (_type_): Infrarot Sensorwerte (Liste aus 5 Elementen (int))
+        valuespd (_type_): Setzwert Geschwindigkeit (int)
+        valuedir (_type_): Setzwert Richtung (int)
+        valueang (_type_): Setzwert Lenkwinkel (int)
+    """    
+    
+    ir1 = valueir[0]
+    ir2 = valueir[1]
+    ir3 = valueir[2]
+    ir4 = valueir[3]
+    ir5 = valueir[4]
     time = str(dt.datetime.timestamp(dt.datetime.now()))
     db = create_connection(name)
     db.execute("""
         INSERT INTO drivedata 
             (timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle)
         VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang))
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",(time, valuedist, valueir, valuespd, valuedir, valueang))
     db.commit()
     db.close()
 
 
 def read_data(name):
-    '''Auslesen aller Daten aus der Singletable-Datenbank (vollständiger DB-Name muss übergeben werden).
-    Reihenfolge: Index, Zeitstempel, Ultraschall, Infrarot, Geschwindigkeit, Direcition, Lenkwinkel'''
+    """Auslesen der kompletten Tabelle 'drivedata' (vordefiniert) aus Datenbank 'name' mit den Spalten:
+        Ultraschall, Infrarot 1 , Infrarot 2 , Infrarot 3 , Infrarot 4 , Infrarot 5, Geschwindigkeit, Direcition, Lenkwinkel
+
+    Args:
+        name (string): Datenbankname
+    """ 
     db = create_connection(name)
     cur = db.cursor()
     cur.execute("SELECT * FROM drivedata")
@@ -279,5 +167,3 @@ def read_data(name):
     for row in rows:
         print(row)
     db.close()
-
-
