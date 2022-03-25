@@ -169,7 +169,7 @@ class SensorCar(SonicCar):
         return self.irm.read_analog()
 
     def log(self):
-        log.add_row_df(self.df, self.distance, self.read_analog , self._speed, self._direction, self._steering_angle)
+        log.add_row_df(self.df, self.distance, self.read_analog , self.speed, self.direction, self.steering_angle)
 
 
 
