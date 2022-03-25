@@ -1,113 +1,21 @@
-import os
-import sys
-import time
-import loggingc2c as log
+import sys, os, time
+sys.path.append(os.path.dirname(sys.path[0]))
 
-# aktuellen Pfad herausfinden:
-path_to_myproject = sys.path[0]
-# mit dirname zweimal nach oben springen und dann mit join in die unterordner wechseln
-# anschliessend mit sys.path.append den zu durchsuchenden Systempfad erweitern auf diesen ordner
-# dieser wird dann auch nach dem basisklassen.py durchsucht
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(path_to_myproject)), "camp2code-project_phase_1", "Code"))
+# hier kommen die drei Car Klassen her
+from auto_code import SensorCar
 
-from basisklassen import *
-
-
-# print(sys.path[0])
-# path_to_myproject = os.path.abspath(__file__)
-
-# ----------------- init --------------------
-
-
-class BaseCar():
-    
-    def __init__(self):
-        self._steering_angle = 90
-        self._speed = 0
-        self._direction = 0
-
-        try:
-            with open(sys.path[0] + "/config.json", "r") as f:
-                data = json.load(f)
-                turning_offset = data["turning_offset"]
-                forward_A = data["forward_A"]
-                forward_B = data["forward_B"]
-                print("Turning Offset: ", turning_offset)
-                #print("Forward A: ", forward_A)
-                #print("Forward B: ", forward_B)
-        except:
-            print("config.json nicht gefunden")
-            turning_offset = 0
-            forward_A = 0
-            forward_B = 0
-
-        self.bw = Back_Wheels(forward_A=forward_A, forward_B=forward_B)
-        self.fw = Front_Wheels(turning_offset=turning_offset)
-        self.usm = Ultrasonic()
-        self.irm = Infrared()
-        self.bw.stop()
-
-    @property
-    def speed(self):
-        return self._speed
-        
-    @property
-    def direction(self):
-        return self._direction
-
-    @property
-    def steering_angle(self):
-        return self._steering_angle
-
-    @steering_angle.setter
-    def steering_angle(self, angle):
-         self._steering_angle = angle
-         self.fw.turn(angle)
-
-    def stop(self):
-        self.bw.stop()
-    
-    def drive(self, speed: int, direction: int):
-        self._direction = direction
-        if direction == 1: #vorwärts
-            self.bw.forward()
-            self._direction = 1
-        elif direction == -1: #rückwärts
-            self.bw.backward()
-            self._direction = -1
-        else: # alles andere = stop
-            self.stop()
-            self._direction = 0
-
-        self._speed = speed
-        self.bw.speed = speed
-
-class SonicCar(BaseCar):
-
-    def __init__(self):
-        super().__init__()
-        self._distance = 0
-
-    @property
-    def distance(self):
-        self._distance = self.usm.distance()
-        return self._distance
 
 # Eigene Funktionen
 
-def print_data(distance, speed, direction, steering_angle):
-    print("Abstand zum Hindernis", distance)
-    print("Geschwindigkeit:", speed)
-    print("Fahrrichtung:", "vorwärts" if direction == 1 else "rückwärts")
-    print("Lenkwinkel:", steering_angle)
+def print_data(car: SensorCar):
+    print("Abstand zum Hindernis", car.distance)
+    print("Geschwindigkeit:", car.speed)
+    print("Fahrrichtung:", "vorwärts" if car.direction == 1 else "rückwärts")
+    print("Lenkwinkel:", car.steering_angle)
     print(20*"--")
 
 
-
-def main(modus, car: SonicCar):
-    db_single_w_path = f"{sys.path[0]}/flo_db_single.sqlite"
-    log.makedatabase_singletable(db_single_w_path)
-    flo_pdf = log.init_dataframe()
+def main(modus, car: SensorCar):
 
     print('------ Fahrparcours --------------------')
     modi = {
@@ -168,20 +76,12 @@ def main(modus, car: SonicCar):
             distance = car.distance
             while distance > 7 or distance < 0:
                 distance = car.distance
-                speed = car.speed
-                direction = car.direction
-                steering_angle = car.steering_angle
-                print_data(distance, speed, direction, steering_angle)
-                #write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle)
-                log.add_row_df(flo_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+                print_data(car)
+                car.log()
                 time.sleep(.3)
             car.stop()
             print("Auto angehalten")
-            print(flo_pdf)
-            conn = log.create_connection(db_single_w_path)
-            flo_pdf.to_sql('drivedata', conn, if_exists='append', index = False)            
-            car.usm.stop() # Sensor ausschalten
-
+       
         elif modus == 4:
             print(modi[modus])
             
@@ -193,40 +93,36 @@ def main(modus, car: SonicCar):
                 distance = car.distance
                 while distance > 7 or distance < 0:
                     distance = car.distance
-                    speed = car.speed
-                    direction = car.direction
-                    steering_angle = car.steering_angle
-                    print_data(distance, speed, direction, steering_angle)
-                    log.add_row_df(flo_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+                    print_data(car)
+                    car.log()
                     time.sleep(.5)
-                car.stop()
                 print("Auto angehalten")
+                car.stop()
                 time.sleep(1.0)
 
-                car.drive(20, -1)
                 print("Retour")
+                car.drive(20, -1)
                 while distance < 20:
                     distance = car.distance
-                    speed = car.speed
-                    direction = car.direction
-                    steering_angle = car.steering_angle
-                    print_data(distance, speed, direction, steering_angle)
-                    log.add_row_df(flo_pdf, distance, [0, 0, 0, 0, 0], speed, direction, steering_angle)
+                    print_data(car)
+                    car.log()
                     time.sleep(.5)
-                car.stop()
-                print("Auto angehalten")
-                time.sleep(1.0)
-
-                car.steering_angle = 70
+                time.sleep(0.5)
+                
                 print("links lenken")
-                time.sleep(.5)
+                car.steering_angle = 70
+                
+                print("Retour")
+                car.drive(20, -1)
+                while distance < 70:
+                    distance = car.distance
+                    print_data(car)
+                    car.log()
+                    time.sleep(.5)
+                time.sleep(.5)            
+                
                 i += 1
-
-            car.steering_angle = 90 # Räder gerade stellen
-            car.stop()              # Auto anhalten
-            car.usm.stop()          # Sensor ausschalten
- 
-            
+           
         elif modus == 5:
             print(modi[modus])
         
@@ -247,7 +143,7 @@ def main(modus, car: SonicCar):
 if __name__ == '__main__':
     
     # Erstellen des Fahrzeuges
-    car = SonicCar()
+    car = SensorCar()
     
     # Ggf. den Timeout des Ultraschallsensors anpassen:
     #car.usm.timeout = 0.06
@@ -263,17 +159,15 @@ if __name__ == '__main__':
     # Aufrufen der main-function und Übergabe des Farzeuges und des Modus
     main(modus, car)
     
-
     # Anzeige der Timeout-Einstellung des Ultraschallsensors, falls gesetzt
     #print(car.usm.timeout)
-
-    # PandasDataFrame Daten anzeigen und schreiben
-    print(flo_pdf)
-    conn = log.create_connection(db_single_w_path)
-    flo_pdf.to_sql('drivedata', conn, if_exists='append', index = False)
+    #print(car.usm.timeout)
 
     # Zum Programmende alles abschalten/reseten
     car.steering_angle = 90     # Räder gerade stellen
     car.stop()                  # Auto anhalten
     car.usm.stop()              # Ulraschall-Sensor ausschalten    
     
+    # PandasDataFrame Daten anzeigen und schreiben
+    print(car.df)
+    car.write_log_to_db()
