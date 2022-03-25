@@ -44,12 +44,16 @@ def main(modus, car: SensorCar):
 
     if modus == 1:
         print("Fahrparcours 1 - Vorwärts und Rückwärts")
+        print("vorwärts")
         car.drive(30, 1)
         time.sleep(3)
+        print("stop")
         car.stop()
         time.sleep(1)
+        print("rückwärts")
         car.drive(50, -1)
         time.sleep(3)
+        print("stop")
         car.stop()
         print("Fahrparcours 1 - beendet")
         
@@ -57,42 +61,58 @@ def main(modus, car: SensorCar):
     elif modus == 2:
         print('Fahrparcours 2 - Kreisfahrt mit maximalem Lenkwinkel')
         car.steering_angle = 90
+        print("vorwärts")
         car.drive(30, 1)
         time.sleep(1)
+        print("Lenkwinkel")
         car.steering_angle = 135
         time.sleep(8)
+        print("stop")
         car.stop()
+        print("rückwärts")
         car.drive(30, -1)
         time.sleep(8)
+        print("Lenkwinkel")
         car.steering_angle = 90
+        print("rückwärts")
         car.drive(30, -1)
         time.sleep(1)
+        print("stop")
         car.stop()
         #entgegengesetzter Uhrzeigersinn
         car.steering_angle = 90
+        print("rückwärts")
         car.drive(30, -1)
         time.sleep(1)
+        print("Lenkwinkel")
         car.steering_angle = 135
         time.sleep(8)
+        print("stop")
         car.stop()
+        print("vorwärts")
         car.drive(30, 1)
         time.sleep(8)
+        print("Lenkwinkel")
         car.steering_angle = 90
+        print("vorwärts")
         car.drive(30, 1)
         time.sleep(1)
+        print("stop")
         car.stop()
 
     elif modus == 3:
         print('Test Ultrasonic')
         car.drive(50, 1)
         while True:
-            if car.distance >= 7 or car.distance < 0:
+            if car.distance >= 12 or car.distance < 0:
+                print(car.distance)
                 car.log()
                 print("-" * 20)
                 time.sleep(0.5)
             else:
                 car.stop()
                 print("Hindernis")
+                print(car.distance)
                 car.log()
                 break
         
@@ -102,16 +122,17 @@ def main(modus, car: SensorCar):
         i = 0
         while i <= 3:
             car.drive(30, 1)
-            if car.distance >= 12 or car.distance < 0:
+            while car.distance >= 12 or car.distance < 0:
                 car.log()
                 time.sleep(0.5)
                 print("if1")
             else:
                 car.stop()
                 print("Hindernis")
+                print(car.distance)
                 car.steering_angle = 55
-                while car.distance < 250:
-                    car.drive(25, -1)
+                car.drive(25, -1)
+                while car.distance < 25:
                     car.log()
                     time.sleep(0.5)
                 i += 1
