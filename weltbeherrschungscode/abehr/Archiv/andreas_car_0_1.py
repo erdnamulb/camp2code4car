@@ -91,6 +91,62 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
+class SensorCar(SonicCar):
+
+    def __init__(self):
+        super().__init__()
+        self.irm = Infrared()
+        # Setup DataFrame and DataBaseDatenbank anlegen und Dataframe initialisieren
+        self.df = log.init_dataframe()
+        self._db_path = f"{sys.path[0]}/logdata.sqlite"
+        log.makedatabase_singletable(self._db_path)
+        
+
+    def drive(self, speed: int, direction: int):
+        """Overloaded function from BaseCar. Added loggin
+        """
+        super().drive(speed, direction)
+        self.log()
+    
+    @property
+    def steering_angle(self):
+        """Overloaded property from BaseCar.
+        """
+        return super().steering_angle
+
+    @steering_angle.setter
+    def steering_angle(self, angle):
+        """Overloaded setter from BaseCar. Added loggin 
+        """
+        super(SensorCar, self.__class__).steering_angle.fset(self,angle)
+        self.log()
+
+    def stop(self):
+        """Overloaded function from BaseCar. Added loggin
+        """
+        super().stop()
+        self.log()
+
+    
+    @property
+    def read_ir_sensors(self) -> list:
+        """Reads the value of the infrared module as analog.
+        Returns:
+            [list]: List of bytes of the measurement of each sensor read in as analog values. 
+        """
+        return self.irm.read_analog()
+
+    def log(self):
+        """Function to create log entries in the dataframe
+        """
+        log.add_row_df(self.df, self.distance, self.read_ir_sensors , self.speed, self.direction, self.steering_angle)
+
+    def write_log_to_db(self):
+        """Function to save log Dataframe to sqlite DB
+        """
+        conn = log.create_connection(self._db_path)
+        self.df.to_sql('drivedata', conn, if_exists='append', index = False)
+
 
     
 
@@ -221,7 +277,7 @@ def main(modus, car:SonicCar):
 
 if __name__ == '__main__':
     
-    car = SonicCar()
+    car = SensorCar()
     try:
         modus = sys.argv[1]
     except:

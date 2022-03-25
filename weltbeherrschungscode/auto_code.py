@@ -126,7 +126,6 @@ class BaseCar():
         self.drive(self._speed, 1)
 
 
-
 class SonicCar(BaseCar):
 
     def __init__(self):
@@ -148,8 +147,7 @@ class SensorCar(SonicCar):
         self.df = log.init_dataframe()
         self._db_path = f"{sys.path[0]}/logdata.sqlite"
         log.makedatabase_singletable(self._db_path)
-        
-
+       
     def drive(self, speed: int, direction: int):
         """Overloaded function from BaseCar. Added loggin
         """
@@ -194,3 +192,4 @@ class SensorCar(SonicCar):
         """
         conn = log.create_connection(self._db_path)
         self.df.to_sql('drivedata', conn, if_exists='append', index = False)
+        Print("Dataframe succesfully written to sqlite DB")
