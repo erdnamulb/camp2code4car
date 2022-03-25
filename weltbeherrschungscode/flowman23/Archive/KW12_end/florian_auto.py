@@ -15,6 +15,8 @@ from basisklassen import *
 
 # print(sys.path[0])
 # path_to_myproject = os.path.abspath(__file__)
+# print(path_to_myproject)
+# print(os.path.join(os.path.dirname(os.path.dirname(path_to_myproject)), "camp2code-project_phase_1", "Code"))
 
 # ----------------- init --------------------
 
@@ -93,7 +95,13 @@ class SonicCar(BaseCar):
         self._distance = self.usm.distance()
         return self._distance
 
-# Eigene Funktionen
+"""def write_data(db_multi_w_path, db_single_w_path, distance, speed, direction, steering_angle):
+    log.add_usm(db_multi_w_path, distance)
+    log.add_driving(db_multi_w_path, speed, direction)                           
+    log.add_steering(db_multi_w_path, steering_angle)                           
+    log.add_data(db_single_w_path, distance, 0, 0, 0, 0, 0, speed, direction, steering_angle)
+    print("data logged")
+"""
 
 def print_data(distance, speed, direction, steering_angle):
     print("Abstand zum Hindernis", distance)
@@ -103,9 +111,17 @@ def print_data(distance, speed, direction, steering_angle):
     print(20*"--")
 
 
+"""def write_log(car):
+    distance = car.distance
+    speed = car.speed
+    direction = car.direction
+    steering_angle = car.steering_angle"""
+
 
 def main(modus, car: SonicCar):
+    #db_multi_w_path = f"{sys.path[0]}/flo_db_multi.sqlite"
     db_single_w_path = f"{sys.path[0]}/flo_db_single.sqlite"
+    #log.makedatabase_multitable(db_multi_w_path)
     log.makedatabase_singletable(db_single_w_path)
     flo_pdf = log.init_dataframe()
 
@@ -225,8 +241,16 @@ def main(modus, car: SonicCar):
             car.steering_angle = 90 # Räder gerade stellen
             car.stop()              # Auto anhalten
             car.usm.stop()          # Sensor ausschalten
- 
+
+
+            # PandasDataFrame Daten anzeigen und schreiben
+            print(flo_pdf)
+            conn = log.create_connection(db_single_w_path)
+            flo_pdf.to_sql('drivedata', conn, if_exists='append', index = False)            
             
+
+
+
         elif modus == 5:
             print(modi[modus])
         
@@ -242,38 +266,18 @@ def main(modus, car: SonicCar):
         
         modus = None
         break
-
     
 if __name__ == '__main__':
     
-    # Erstellen des Fahrzeuges
     car = SonicCar()
-    
-    # Ggf. den Timeout des Ultraschallsensors anpassen:
     #car.usm.timeout = 0.06
     #print(car.usm.timeout)
 
-    # Setzen des Modus, wenn er als Argument bei der Dateiausführung mitgegeben wird
-    # Ohne Argument kommt das Auswahlmenü
     try:
         modus = sys.argv[1]
     except:
         modus = None
 
-    # Aufrufen der main-function und Übergabe des Farzeuges und des Modus
     main(modus, car)
-    
-
-    # Anzeige der Timeout-Einstellung des Ultraschallsensors, falls gesetzt
     #print(car.usm.timeout)
-
-    # PandasDataFrame Daten anzeigen und schreiben
-    print(flo_pdf)
-    conn = log.create_connection(db_single_w_path)
-    flo_pdf.to_sql('drivedata', conn, if_exists='append', index = False)
-
-    # Zum Programmende alles abschalten/reseten
-    car.steering_angle = 90     # Räder gerade stellen
-    car.stop()                  # Auto anhalten
-    car.usm.stop()              # Ulraschall-Sensor ausschalten    
-    
+    car.usm.stop()
