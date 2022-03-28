@@ -1,10 +1,12 @@
 from cgi import test
 import dash
+import pandas as pd
 from dash import dcc
 from dash import html
 import plotly.express as px
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
+from sqlite3 import connect
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -93,6 +95,13 @@ card_distance_tot = dbc.Card(
     style={"width": "18rem"}, color="secondary", inverse=True,
 )
 
+
+df = pd.DataFrame()
+conn = connect('testdrivedata.db')
+df = pd.read_sql('SELECT time, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang FROM drivedata', conn)
+fig = px.scatter(df, x="time", y="valuedist")
+
+
 app.layout = html.Div(
     children=[
         html.H1(id='H1',
@@ -119,11 +128,13 @@ app.layout = html.Div(
             ], style={'marginTop': 10, 'marginLeft': 40}
         ),
         html.Br(),
+        dcc.Graph(figure=fig),
+        html.Br(),
         html.Div(
                 [
-                dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', key=2),
-                dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', key=3),
-                dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', key=4),
+                dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', value=2),
+                dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', value=3),
+                dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', value=4),
                 html.Span(id='status-output', style={"verticalAlign": "middle"}),
                 ], style={'marginTop': 10, 'marginLeft': 40}
                 ), 
@@ -131,11 +142,16 @@ app.layout = html.Div(
 )
 
 @app.callback(
-    Output('status-output', 'children'), [Input('startbutton-2', 'p')]
+    Output('status-output', 'children'), 
+    #Output('status-output', 'children'), 
+    #Output('status-output', 'children'), 
+    [Input('startbutton-2', 'value')],
+    [Input('startbutton-3', 'value')],
+    [Input('startbutton-4', 'value')]
 )
-def on_button_click(p):
+def on_button_click(value):
     # Testdrive.py aufrufen mit entsprechendem Argument
-    text = 'Fahrprogramm {} wird gestartet.'.format(p)
+    text = 'Fahrprogramm {} wird gestartet.'.format(value)
     return text
 
 
