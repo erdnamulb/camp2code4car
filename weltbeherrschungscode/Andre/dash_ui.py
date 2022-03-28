@@ -1,5 +1,7 @@
+from multiprocessing import Value
 import sys, os
 from cgi import test
+from xml.sax.handler import feature_string_interning
 import dash
 import pandas as pd
 from dash import dcc
@@ -16,8 +18,8 @@ df = pd.DataFrame()
 conn = connect('logdata.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
 df = df.iloc[1: , : ]
-print(df)
-fig = px.scatter(df, x="timestamp", y="distance")
+features = df.columns[1:len(df.columns)]
+
 
 speed_max = df['speed'].max()
 speed_min = df['speed'].min()
@@ -135,18 +137,34 @@ app.layout = html.Div(
             ], style={'marginTop': 10, 'marginLeft': 40}
         ),
         html.Br(),
-        dcc.Graph(figure=fig),
+        dcc.Dropdown(
+            id='choose_data',
+            options=[{'label': i, 'value': i} for i in features],
+            value='distance',
+        ),
+        html.Br(),
+        dcc.Graph(id='dataplot'),
         html.Br(),
         html.Div(
                 [
-                dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', value=2),
-                dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', value=3),
-                dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', value=4),
+                dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', value='2'),
+                dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', value='3'),
+                dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', value='4'),
                 html.Span(id='status-output', style={"verticalAlign": "middle"}),
                 ], style={'marginTop': 10, 'marginLeft': 40}
                 ), 
     ]
 )
+
+
+@app.callback(
+    Output(component_id='dataplot', component_property='figure'),
+    [Input(component_id='choose_data', component_property='value')])
+def graph_update(value_of_input_component):
+    #print(value_of_input_component)
+    fig = px.line(df, x=df['timestamp'], y=df[value_of_input_component])
+    return fig
+
 
 @app.callback(
     Output('status-output', 'children'), 
@@ -154,8 +172,7 @@ app.layout = html.Div(
     #Output('status-output', 'children'), 
     [Input('startbutton-2', 'value')],
     [Input('startbutton-3', 'value')],
-    [Input('startbutton-4', 'value')]
-)
+    [Input('startbutton-4', 'value')])
 def on_button_click(value):
     # Testdrive.py aufrufen mit entsprechendem Argument
     text = 'Fahrprogramm {} wird gestartet.'.format(value)
