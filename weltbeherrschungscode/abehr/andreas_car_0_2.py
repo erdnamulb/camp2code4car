@@ -6,6 +6,8 @@ from datetime import datetime
 import numpy as np
 
 
+
+
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
 
@@ -118,56 +120,75 @@ def main(modus, car: SensorCar):
         
         elif modus == 5:
             print(modi[modus])
-            high_value = 140
-            line_value = 100
-            car.steering_angle = 90
-            #print(car.get_average(50))
-            #car.cali_references()
-            while True:
-                ir_data = car.read_analog()
-                print(f"{ir_data}")
-                # Prüfen, ob Linie noch da ist
-                line_found = False
-                for ir in ir_data:
-                    if ir < line_value:
-                        line_found = True
-                        time_start = 0
-                if not line_found:
-                    if time_start == 0:
-                        time_start = datetime.timestamp(datetime.now())
-                    time_now = datetime.timestamp(datetime.now())
-                    print(time_now - time_start)
-                    if time_now - time_start < 2:
-                        ir_data = car.read_analog()
-                        for ir in ir_data:
-                            if ir < line_value: #line found
-                                time_start = 0
-                        time.sleep(.1)
-                        continue
-                    car.steering_angle = 90
-                    car.stop()
-                    break
-                # Lenken
-                analog = np.array(ir_data)
-                min_ir = np.min(analog)
-                min_pos = np.where(analog == min_ir)[0][0]
-                print(f"min = {min_ir} Position: {min_pos}")
-                if min_pos == 0:
-                    car.steering_angle = 45
-                    car.drive(30,1)
-                elif min_pos == 1:
-                    car.steering_angle = 65
-                    car.drive(35,1)
-                elif min_pos == 2:
-                    car.steering_angle = 90
-                    car.drive(40,1)
-                elif min_pos == 3:
-                    car.steering_angle = 115
-                    car.drive(35,1)
-                elif min_pos == 4:
-                    car.steering_angle = 135
-                    car.drive(30,1)
-                time.sleep(.1)
+            sens = car.irm.read_digital()
+            print(sens)
+            delay = 0.0005
+            a_step = 3
+            b_step = 10
+            c_step = 30
+            d_step = 45
+            turning_angle = 40
+            off_track_count =0
+            max_off_track_count =5
+            turning_max = 45
+            
+            distance = car.distance
+            car.drive(40,1)
+            while distance > 12 or distance < 0:
+                distance = car.distance
+                lt_status_now = car.irm.read_digital()
+                print(lt_status_now)
+                # Angle calculate
+                if	lt_status_now == [1,1,0,1,1]:
+                    step = 0	
+                elif lt_status_now == [1,0,0,1,1] or lt_status_now == [1,1,0,0,1]:
+                    step = a_step
+                elif lt_status_now == [1,0,1,1,1] or lt_status_now == [1,1,1,0,1]:
+                    step = b_step
+                elif lt_status_now == [0,0,1,1,1] or lt_status_now == [1,1,1,0,0]:
+                    step = c_step
+                elif lt_status_now == [0,1,1,1,1] or lt_status_now == [1,1,1,1,0]:
+                    step = d_step
+
+                # Direction calculate
+                if	lt_status_now == [1,1,0,1,1]:
+                    off_track_count = 0
+                    car.steering_angle =90
+                # turn right
+                elif lt_status_now in ([1,0,0,1,1],[1,0,1,1,1],[0,0,1,1,1],[0,1,1,1,1]):
+                    off_track_count = 0
+                    turning_angle = int(90 - step)
+                # turn left
+                elif lt_status_now in ([1,1,0,0,1],[1,1,1,0,1],[1,1,1,0,0],[1,1,1,1,0]):
+                    off_track_count = 0
+                    turning_angle = int(90 + step)
+                elif lt_status_now == [1,1,1,1,1]:
+                    off_track_count += 1
+                    if off_track_count > max_off_track_count:
+                        #tmp_angle = -(turning_angle - 90) + 90
+                        tmp_angle = (turning_angle-90)/abs(90-turning_angle)
+                        tmp_angle *= turning_max
+                        
+                        car.steering_angle = tmp_angle
+                        
+                        
+
+                        car.steering_angle = turning_angle
+                        print("Maximaler Off Track überschritten")
+                        time.sleep(2)
+                        
+                        
+                        
+
+                        
+
+                else:
+                    off_track_count = 0
+            
+                car.steering_angle =turning_angle
+                time.sleep(delay)
+                car.log()
+            car.stop()
         
         elif modus == 6:
             print(modi[modus])
@@ -198,8 +219,9 @@ def main(modus, car: SensorCar):
 
 if __name__ == '__main__':
     # car anlegen
+    ref= [40.42, 45.13, 48.195, 52.36, 52.8]
     car = SensorCar()
-
+    car.irm.set_references(ref)
     try:
         modus = sys.argv[1]
     except:
