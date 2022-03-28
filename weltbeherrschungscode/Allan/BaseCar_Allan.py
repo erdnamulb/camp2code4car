@@ -1,23 +1,29 @@
 import random
+import time
 import loggingc2c as db
 import sys
-import click
 import datetime as dt
 import os
 import sqlite3
+import pandas as pd
+sys.path.append(os.path.dirname(sys.path[0]))
+from auto_code import *
 
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/Code')
 from basisklassen import *
 sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/weltbeherrschungscode/Allan')
+sys.path.append('/home/pi/Projektphase1/camp2code4car/camp2code-project_phase_1/weltbeherrschungscode')
 
-db.makedatabase(f"{sys.path[0]}/AllanDBmulti.sqlite")
+
+
+db.makedatabase(f'{sys.path[0]}/AllanDBmulti.sqlite')
 pfad_db_multi = f"{sys.path[0]}/AllanDBmulti.sqlite"
 db.makedatabase_singletable(f"{sys.path[0]}/AllanDBsingle.sqlite")
 pfad_db_single = f"{sys.path[0]}/AllanDBsingle.sqlite"
 
 df = db.init_dataframe()
 
-
+"""
 class BaseCar():
 
     def __init__(self):
@@ -78,6 +84,7 @@ class SonicCar(BaseCar):
 
 Sonic = SonicCar()
 
+"""
 
 def hindernisumfahren():
     auswahl = [135,45]
@@ -97,6 +104,11 @@ def hindernisumfahren():
     car.steering_angle = 90
     car.stop()
 
+
+
+car = BaseCar()
+Sonic = SonicCar()
+Sensor = SensorCar()
 
 @click.command()
 @click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
@@ -228,7 +240,7 @@ def main(modus):
         else:
             print('Abruch.')
 
-        car.usm.stop
+        Sonic.usm.stop
         conn = sqlite3.connect(f"{sys.path[0]}/AllanDBsingle.sqlite")
         df.to_sql("drivedata", conn, if_exists = "append", index = False)
         print(df)
