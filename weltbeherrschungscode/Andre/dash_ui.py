@@ -1,3 +1,4 @@
+import sys, os
 from cgi import test
 import dash
 import pandas as pd
@@ -7,17 +8,26 @@ import plotly.express as px
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 from sqlite3 import connect
+import datetime as dt
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-df = px.data.stocks()
+df = pd.DataFrame()
+conn = connect('logdata.sqlite')
+df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
+df = df.iloc[1: , : ]
+print(df)
+fig = px.scatter(df, x="timestamp", y="distance")
 
-speed_max = 55
-speed_min = 15
-speed_mean = 35
-drivetime_tot = 1234
+speed_max = df['speed'].max()
+speed_min = df['speed'].min()
+speed_mean = df['speed'].mean()
+time_start = dt.datetime.fromtimestamp(float(df['timestamp'].min()))
+time_stop = dt.datetime.fromtimestamp(float(df['timestamp'].max()))
+duration = time_stop - time_start
+drivetime_tot = duration.total_seconds()
 drivetime_str = str(drivetime_tot) + " s"
-distance_tot = drivetime_tot * speed_mean
+distance_tot = drivetime_tot * speed_mean * (30/40) # ca. 30cm bei Geschwindigkeit 40 pro s
 distance_str = str(distance_tot) + " cm"
 
 card_speed_max = dbc.Card(
@@ -96,10 +106,7 @@ card_distance_tot = dbc.Card(
 )
 
 
-df = pd.DataFrame()
-conn = connect('testdrivedata.db')
-df = pd.read_sql('SELECT time, valuedist, valueir1, valueir2, valueir3, valueir4, valueir5, valuespd, valuedir, valueang FROM drivedata', conn)
-fig = px.scatter(df, x="time", y="valuedist")
+
 
 
 app.layout = html.Div(
