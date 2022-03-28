@@ -19,3 +19,9 @@ weltbeherrschungscode/basisklassen.py
 weltbeherrschungscode/config.json
 weltbeherrschungscode/Stefan/__pycache__/auto_code.cpython-37.pyc
 weltbeherrschungscode/flowman23/auto_code.py
+weltbeherrschungscode/Allan/1.1_dash_example_1.py
+.gitignore
+weltbeherrschungscode/Allan/2.0_callbacks.py
+weltbeherrschungscode/Allan/3.0_boot_strap.py
+weltbeherrschungscode/Allan/__pycache__/dash.cpython-38.pyc
+weltbeherrschungscode/Allan/1.2_1.3_dash_core_componenets_and_plotly.py
