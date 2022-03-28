@@ -80,50 +80,6 @@ class BaseCar():
 
         self._speed = speed
         self.bw.speed = speed
-    
-    def wait_angle(self,  waitTime: float, angle: int):
-        """Function to drive with minimal steering changes over a given time 
-        """
-        now = 0
-        while now < waitTime:
-            self.steering_angle = angle
-            time.sleep(.25)
-            
-            if angle > 90:
-                offset = -5
-            else:
-                offset = 5
-            self.steering_angle = angle + offset
-            time.sleep(.25)
-
-            now += .5
-            print(f"time= {now:.1f} set_angle = {angle}")
-    
-    def turn_direction(self):
-        """The function alternately returns the two end stops of the steering
-        """
-        if self._bool_turn:
-            angle = 45
-        else:
-            angle = 135
-        self._bool_turn = not self._bool_turn
-        return angle
-
-    def avoid_crash(self):
-        """The function is intended to avoid a crash. 
-        By driving backwards for 1s and then driving away for another 2s with full steering angle (left or right).
-        The vehicle then continues straight ahead.
-        """
-        self.stop()
-        time.sleep(.5)
-        self.drive(self._speed,-1)
-        time.sleep(1)
-        self.steering_angle = self.turn_direction()
-        time.sleep(2)
-        self.stop()
-        time.sleep(.5)
-        self.steering_angle = 90
-        self.drive(self._speed, 1)
 
 
 class SonicCar(BaseCar):
@@ -192,4 +148,4 @@ class SensorCar(SonicCar):
         """
         conn = log.create_connection(self._db_path)
         self.df.to_sql('drivedata', conn, if_exists='append', index = False)
-        Print("Dataframe succesfully written to sqlite DB")
+        print("Dataframe succesfully written to sqlite DB")

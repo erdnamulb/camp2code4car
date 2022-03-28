@@ -5,6 +5,52 @@ from auto_code import SensorCar
 from datetime import datetime
 import numpy as np
 
+def wait_with_angle(car: SensorCar, waitTime: float, angle: int):
+    """Function to drive with minimal steering changes over a given time 
+    """
+    now = 0
+    while now < waitTime:
+        car.steering_angle = angle
+        time.sleep(.25)
+        if angle > 90:
+            offset = -5
+        else:
+            offset = 5
+        car.steering_angle = angle + offset
+        time.sleep(.25)
+
+        now += .5
+        print(f"time= {now:.1f} set_angle = {angle}")
+
+def turn_direction(car: SensorCar):
+    """The function alternately returns the two end stops of the steering
+    """
+    if car._bool_turn:
+        angle = 45
+    else:
+        angle = 135
+    car._bool_turn = not car._bool_turn
+    return angle
+
+def avoid_crash(car):
+    """The function is intended to avoid a crash. 
+    By driving backwards for 1s and then driving away for another 2s with full steering angle (left or right).
+    The vehicle then continues straight ahead.
+    """
+    car.stop()
+    time.sleep(.5)
+    car.drive(car._speed,-1)
+    time.sleep(1)
+    car.steering_angle = turn_direction(car)
+    time.sleep(2)
+    car.stop()
+    time.sleep(.5)
+    car.steering_angle = 90
+    car.drive(car._speed, 1)
+
+def follow_line(car):
+    pass
+
 
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
@@ -71,7 +117,7 @@ def main(modus, car: SensorCar):
             car.steering_angle = 135
             time.sleep(.3)
             car.drive(40,1)
-            car.wait_angle(10, 135)
+            wait_with_angle(10, 135)
             car.stop()
             car.steering_angle = 90
             time.sleep(1)
@@ -79,7 +125,7 @@ def main(modus, car: SensorCar):
             car.steering_angle = 135
             time.sleep(.3)
             car.drive(40,-1)
-            car.wait_angle(10, 135)
+            wait_with_angle(10, 135)
             car.stop()
             time.sleep(.5)
             print("Rückwärts")
@@ -112,19 +158,18 @@ def main(modus, car: SensorCar):
                     print(f"{distance} , {car.steering_angle}")
                     car.log()
                     time.sleep(.3)
-                car.avoid_crash()
+                avoid_crash(car)
                 loop_count += 1
             car.stop()
         
         elif modus == 5:
             print(modi[modus])
-            high_value = 140
             line_value = 100
             car.steering_angle = 90
             #print(car.get_average(50))
             #car.cali_references()
             while True:
-                ir_data = car.read_analog()
+                ir_data = car.read_ir_sensors
                 print(f"{ir_data}")
                 # Prüfen, ob Linie noch da ist
                 line_found = False
@@ -138,7 +183,7 @@ def main(modus, car: SensorCar):
                     time_now = datetime.timestamp(datetime.now())
                     print(time_now - time_start)
                     if time_now - time_start < 2:
-                        ir_data = car.read_analog()
+                        ir_data = car.read_ir_sensors
                         for ir in ir_data:
                             if ir < line_value: #line found
                                 time_start = 0
