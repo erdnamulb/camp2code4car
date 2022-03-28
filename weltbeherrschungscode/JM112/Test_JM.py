@@ -10,6 +10,9 @@ import numpy as np
 #@click.option('--modus', '--m', type=int, default=None, help="Startet Test für Klasse direkt.")
 def main(modus, car: SensorCar):
 
+    #Digitale Infrarot Sensoren kalibrieren
+    car.irm.set_references([132.64, 125.52, 124.655, 125.995, 118.575])
+
    
   
 
@@ -102,10 +105,12 @@ def main(modus, car: SensorCar):
 
     elif modus == 3:
         print('Test Ultrasonic')
-        car.drive(50, 1)
+        #car.drive(50, 1)
         while True:
             if car.distance >= 12 or car.distance < 0:
                 print(car.distance)
+                #Nur Infrarot Sensor Test
+                print(car.irm.read_digital())
                 car.log()
                 print("-" * 20)
                 time.sleep(0.5)
@@ -139,6 +144,58 @@ def main(modus, car: SensorCar):
         car.stop()
         print("Erkundungstour beendet")
         print("Daten in DB")
+
+
+    elif modus == 5:
+        print(modi[modus])
+        #Kalibrierung
+        #car.irm.cali_references()
+        #print(car.irm._references)
+        #Setze Kalibrierreferenz
+        #set_references([132.64, 125.52, 124.655, 125.995, 118.575])
+
+        a_angle = 3
+        b_angle = 10
+        c_angle = 30
+        d_angle = 45
+
+        #car.drive(40, 1)
+
+        while True:
+            time.sleep(1)
+            #als Klassenmethode
+            irm_status = car.irm.read_digital()
+            print(irm_status)
+
+            #Lenkwinkel ermitteln
+            if irm_status == [0, 0, 1, 0, 0]:
+                angle = 0
+                print(0)
+            elif irm_status == [0, 1, 1, 0, 0] or [0, 0, 1, 1, 0]:
+                angle = a_angle
+                print("a")
+            elif irm_status == [0, 1, 0, 0, 0] or [0, 0, 0, 1, 0]:
+                angle = b_angle
+                print("b")
+            elif irm_status == [1, 1, 0, 0, 0] or [0, 0, 0, 1, 1]:
+                angle = c_angle
+            elif irm_status == [1, 0, 0, 0, 0] or [0, 0, 0, 0, 1]:
+                angle = d_angle
+
+            #Lenkwinkel einstellen
+            if irm_status == [0, 0, 1, 0, 0]:
+                car.steering_angle = 90
+            elif irm_status in ([0, 1, 1, 0, 0], [0, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 0, 0, 0, 0]):
+                car.steering_angle = int(90 - angle)
+            elif irm_status in ([0, 0, 1, 1, 0], [0, 0, 0, 1, 0], [0, 0, 0, 1, 1], [0, 0, 0, 0, 1]):
+                car.steering_angle = int(90 + angle)
+            elif irm_status == [0, 0, 0, 0, 0]:
+                car.stop()
+                print("fehlende Fahrbahn")
+                break
+
+
+
 
 
 
