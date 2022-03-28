@@ -1,6 +1,8 @@
 import sys, os, time
 sys.path.append(os.path.dirname(sys.path[0]))
 
+import random
+
 # hier kommen die drei Car Klassen her
 from auto_code import SensorCar
 
@@ -48,15 +50,15 @@ def main(modus, car: SensorCar):
     while True:
 
         while modus == None:
-            modus = input('Wähle  (Andere Taste für Abbruch): ? ')
+            modus = input('Wähle (Andere Taste für Abbruch): ? ')
             if modus in ['1', '2', '3', '4', '5', '6', '7', '0']:
                 break
             else:
                 modus = None
                 print('Getroffene Auswahl nicht möglich.')
-                #quit()
+                quit()
         modus = int(modus)
-
+        print('--' * 15)
         if modus == 1:
             print(modi[modus])
             car.drive(50,1)
@@ -94,38 +96,44 @@ def main(modus, car: SensorCar):
         elif modus == 4:
             print(modi[modus])
             
-            i=0
-            while i < 2:
-                print(i)
-                print("Los geht's")
+            i=1
+            anzahl_durchlauf = 3
+            while i <= anzahl_durchlauf:
+                print("--" * 10)
+                print("Durchlauf:", i, "von", anzahl_durchlauf)
+                set_distance = 7
+                print("Fahre Vorwärts bis Abstand:", set_distance)
+                car.steering_angle = 90
                 car.drive(20,1)
                 distance = car.distance
-                while distance > 7 or distance < 0:
+                while distance > set_distance or distance < 0:
                     distance = car.distance
-                    print_data(car)
+                    #print_data(car)
                     car.log()
                     time.sleep(.5)
-                print("Auto angehalten")
+                print("Hindernis erkannt - Auto angehalten")
                 car.stop()
                 time.sleep(1.0)
 
-                print("Retour")
+                set_distance = 20
+                print("Fahre Rückwärts bis Abstand:", set_distance)
                 car.drive(20, -1)
-                while distance < 20:
+                while distance < set_distance:
                     distance = car.distance
-                    print_data(car)
+                    #print_data(car)
                     car.log()
                     time.sleep(.5)
-                time.sleep(0.5)
-                
-                print("links lenken")
-                car.steering_angle = 70
-                
-                print("Retour")
+                time.sleep(.5)
+                                
+                car.steering_angle = random.randint(45,135)
+                print("Lenkwinkel:", car.steering_angle)
+
+                set_distance = 40
+                print("Fahre Rückwärts bis Abstand:", set_distance)
                 car.drive(20, -1)
-                while distance < 70:
+                while distance < set_distance:
                     distance = car.distance
-                    print_data(car)
+                    #print_data(car)
                     car.log()
                     time.sleep(.5)
                 time.sleep(.5)            
