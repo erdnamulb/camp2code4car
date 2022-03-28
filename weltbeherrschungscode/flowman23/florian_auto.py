@@ -17,6 +17,15 @@ def print_data(car: SensorCar):
 
 def main(modus, car: SensorCar):
 
+    # mit folgenden vier Zeilen bei Bedarf den IR Sensor rekalibrieren und den wert unten hart eincoden
+    #car.irm.cali_references()
+    #print(car.irm._references)
+    #ref = car.irm._references
+    #print (ref)
+    
+    # Hard-coded digitale Schwellenwerte IR Sensor:
+    ref = [65.85, 73.55, 76.58, 77.595, 84.835]
+
     print('------ Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
@@ -125,6 +134,24 @@ def main(modus, car: SensorCar):
            
         elif modus == 5:
             print(modi[modus])
+            distance = car.distance
+            car.irm.set_references(ref)
+            print ("Eingestellte digitale IR-Schwellenwerte:", car.irm._references)
+            while distance > 7 or distance < 0:
+                distance = car.distance
+                print(car.read_ir_sensors)                
+                print(car.irm.read_digital())
+                print("hell" if car.irm.read_digital()[0] == 0 else "dunkel",\
+                        ",hell" if car.irm.read_digital()[1] == 0 else ",dunkel",\
+                        ",hell" if car.irm.read_digital()[2] == 0 else ",dunkel",\
+                        ",hell" if car.irm.read_digital()[3] == 0 else ",dunkel",\
+                        ",hell" if car.irm.read_digital()[4] == 0 else ",dunkel",)
+                print("-----")
+
+                car.log()
+                time.sleep(.5)
+            car.stop()
+            print("Auto angehalten")
         
         elif modus == 6:
             print(modi[modus])
