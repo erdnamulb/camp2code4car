@@ -1,3 +1,4 @@
+from cgi import test
 import dash
 from dash import dcc
 from dash import html
@@ -98,22 +99,44 @@ app.layout = html.Div(
                 children='Sensordaten Cockpit',
                 style={'textAlign': 'center', 'marginTop': 40, 'marginBottom': 40}),
         html.H4(id='H2',
-                children='Datenübersicht SensorCar'),
-        html.Div(children='Laberrhabarber'),
+                children='Datenübersicht SensorCar',
+                ),
+        html.Div(children='Laberrhabarber',
+                style={'marginTop': 10, 'marginLeft': 40}),
         html.Br(),
-        dbc.Row([
-            dbc.Col([card_speed_max], width=3),
-            dbc.Col([card_speed_min], width=3),
-            dbc.Col([card_speed_mean], width=3),
-        ], align='center'),
+        html.Div(
+            children=[
+                dbc.Row([
+                dbc.Col([card_speed_max], width=3),
+                dbc.Col([card_speed_min], width=3),
+                dbc.Col([card_speed_mean], width=3),
+                ], align='center'),
+                html.Br(),
+                dbc.Row([
+                dbc.Col([card_drivetime_tot], width=3),
+                dbc.Col([card_distance_tot], width=3),
+                ], align='center')
+            ], style={'marginTop': 10, 'marginLeft': 40}
+        ),
         html.Br(),
-        dbc.Row([
-            dbc.Col([card_drivetime_tot], width=3),
-            dbc.Col([card_distance_tot], width=3),
-        ], align='center'),
+        html.Div(
+                [
+                dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', key=2),
+                dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', key=3),
+                dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', key=4),
+                html.Span(id='status-output', style={"verticalAlign": "middle"}),
+                ], style={'marginTop': 10, 'marginLeft': 40}
+                ), 
     ]
 )
 
+@app.callback(
+    Output('status-output', 'children'), [Input('startbutton-2', 'p')]
+)
+def on_button_click(p):
+    # Testdrive.py aufrufen mit entsprechendem Argument
+    text = 'Fahrprogramm {} wird gestartet.'.format(p)
+    return text
 
 
 if __name__ == '__main__':
