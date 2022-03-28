@@ -152,8 +152,8 @@ app.layout = html.Div(
         html.Div(
                 [
                 dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', value='2'),
-                dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', value='3'),
-                dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', value='4'),
+                #dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', value='3'),
+                #dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', value='4'),
                 html.Span(id='status-output', style={"verticalAlign": "middle"}),
                 ], style={'marginTop': 10, 'marginLeft': 40}
                 ), 
@@ -176,8 +176,9 @@ def graph_update(value_of_input_component):
     #Output('status-output', 'children'), 
     #Output('status-output', 'children'), 
     [Input('startbutton-2', 'value')],
-    [Input('startbutton-3', 'value')],
-    [Input('startbutton-4', 'value')])
+    #[Input('startbutton-3', 'value')],
+    #[Input('startbutton-4', 'value')]
+    )
 def on_button_click(value):
     # Testdrive.py aufrufen mit entsprechendem Argument
     text = 'Fahrprogramm {} wird gestartet.'.format(value)
