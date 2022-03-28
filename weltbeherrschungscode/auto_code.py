@@ -192,4 +192,4 @@ class SensorCar(SonicCar):
         """
         conn = log.create_connection(self._db_path)
         self.df.to_sql('drivedata', conn, if_exists='append', index = False)
-        Print("Dataframe succesfully written to sqlite DB")
+        print("Dataframe succesfully written to sqlite DB")
