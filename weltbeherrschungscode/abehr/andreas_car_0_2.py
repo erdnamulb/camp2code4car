@@ -129,11 +129,11 @@ def main(modus, car: SensorCar):
             d_step = 45
             turning_angle = 40
             off_track_count =0
-            max_off_track_count =5
+            max_off_track_count =25
             turning_max = 45
             
             distance = car.distance
-            car.drive(40,1)
+            car.drive(30,1)
             while distance > 12 or distance < 0:
                 distance = car.distance
                 lt_status_now = car.irm.read_digital()
@@ -168,19 +168,20 @@ def main(modus, car: SensorCar):
                         #tmp_angle = -(turning_angle - 90) + 90
                         tmp_angle = (turning_angle-90)/abs(90-turning_angle)
                         tmp_angle *= turning_max
-                        
+                        car.drive(30,-1)
                         car.steering_angle = tmp_angle
-                        
-                        
+
+                        while True:
+                            lt_status = car.irm.read_digital()
+                            if lt_status[2] == 0:
+                                break
+                        car.stop()
 
                         car.steering_angle = turning_angle
-                        print("Maximaler Off Track überschritten")
-                        time.sleep(2)
-                        
-                        
-                        
+                        time.sleep(0.2) 
+                        car.drive(30,1)
+                        time.sleep(0.2)
 
-                        
 
                 else:
                     off_track_count = 0
@@ -219,7 +220,8 @@ def main(modus, car: SensorCar):
 
 if __name__ == '__main__':
     # car anlegen
-    ref= [40.42, 45.13, 48.195, 52.36, 52.8]
+    ref= [28.19,33.345,35,35.01,34.95]
+    
     car = SensorCar()
     car.irm.set_references(ref)
     try:
