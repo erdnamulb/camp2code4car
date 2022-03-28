@@ -18,6 +18,10 @@ df = pd.DataFrame()
 conn = connect('logdata.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
 df = df.iloc[1: , : ]
+print(df)
+df['time'] = df.apply(
+    lambda row: dt.datetime.fromtimestamp(float(row.timestamp)), axis=1)
+print(df)
 features = df.columns[1:len(df.columns)]
 
 
@@ -161,8 +165,9 @@ app.layout = html.Div(
     Output(component_id='dataplot', component_property='figure'),
     [Input(component_id='choose_data', component_property='value')])
 def graph_update(value_of_input_component):
-    #print(value_of_input_component)
-    fig = px.line(df, x=df['timestamp'], y=df[value_of_input_component])
+    fig = px.line(df, x=pd.to_datetime(df['time']), y=df[value_of_input_component],
+    title="Gruppe 3 Fahrdaten", 
+    labels={'x': 'Zeit', 'y':value_of_input_component})
     return fig
 
 
