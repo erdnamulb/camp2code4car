@@ -32,7 +32,7 @@ def turn_direction(car: SensorCar):
     car._bool_turn = not car._bool_turn
     return angle
 
-def avoid_crash(car):
+def avoid_crash(car: SensorCar):
     """The function is intended to avoid a crash. 
     By driving backwards for 1s and then driving away for another 2s with full steering angle (left or right).
     The vehicle then continues straight ahead.
@@ -48,8 +48,77 @@ def avoid_crash(car):
     car.steering_angle = 90
     car.drive(car._speed, 1)
 
-def follow_line(car):
-    pass
+def follow_line_anbalog(car: SensorCar, line_value: int):
+    car.steering_angle = 90
+    while True:
+        # Sensoren auswerten
+        _, ir_data = car.log_and_read_values
+        np_ir_data = np.array(ir_data)
+        min_pos = np.where(np_ir_data == np.min(np_ir_data))[0][0]
+        print(f"{ir_data} --> Lenkposition: {min_pos}")
+        # Prüfen, ob Linie noch da ist
+        line_found = False
+        for ir in ir_data:
+            if ir < line_value:
+                line_found = True
+        if not line_found:
+            break # Schleife beenden
+        # Lenken
+        if min_pos == 0:
+            car.steering_angle = 45
+            car.drive(30,1)
+        elif min_pos == 1:
+            car.steering_angle = 65
+            car.drive(35,1)
+        elif min_pos == 2:
+            car.steering_angle = 90
+            car.drive(40,1)
+        elif min_pos == 3:
+            car.steering_angle = 115
+            car.drive(35,1)
+        elif min_pos == 4:
+            car.steering_angle = 135
+            car.drive(30,1)
+        time.sleep(.1)
+
+def follow_line(car: SensorCar):
+    car.steering_angle = 90
+    a_step = 5
+    b_step = 15
+    c_step = 30
+    d_step = 45
+    while True:
+        # Sensoren auswerten
+        _, ir_data = car.log_and_read_values
+        # Angle calculate
+        if	ir_data == [0,0,1,0,0]:
+            step = 0	
+        elif ir_data == [0,1,1,0,0] or ir_data == [0,0,1,1,0]:
+            step = a_step
+        elif ir_data == [0,1,0,0,0] or ir_data == [0,0,0,1,0]:
+            step = b_step
+        elif ir_data == [1,1,0,0,0] or ir_data == [0,0,0,1,1]:
+            step = c_step
+        elif ir_data == [1,0,0,0,0] or ir_data == [0,0,0,0,1]:
+            step = d_step
+
+        # straightforward
+        if	ir_data == [0,0,1,0,0]:
+            steering_angle = 90
+        # turn right
+        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
+            steering_angle = int(90 - step)
+        # turn left
+        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
+            steering_angle = int(90 + step)
+        
+        print(f"{ir_data} --> Lenkposition: {steering_angle}")
+        # Prüfen, ob Linie noch da ist
+        if ir_data == [0,0,0,0,0]:
+            break # Schleife beenden
+        # Lenken
+        car.steering_angle = steering_angle
+        time.sleep(.05)
 
 
 def main(modus, car: SensorCar):
@@ -68,6 +137,7 @@ def main(modus, car: SensorCar):
         5: 'Fahrparcours 5 - Linienverfolgung',
         6: 'Fahrparcours 6 - Erweiterte Linienverfolgung',
         7: 'Fahrparcours 7 - 6. + Hinderniserkennung',
+        8: 'IR - Sensoren Kalibrieren',
         0: 'Ende'
     }
 
@@ -137,11 +207,10 @@ def main(modus, car: SensorCar):
 
         elif modus == 3:
             print(modi[modus])
-            distance = car.distance
+            distance, _ = car.log_and_read_values
             car.drive(40,1)
             while distance > 7 or distance < 0:
-                distance = car.distance
-                car.log()
+                distance, _ = car.log_and_read_values
                 print(distance)
                 time.sleep(.3)
             car.stop()
@@ -152,88 +221,62 @@ def main(modus, car: SensorCar):
             while loop_count < 2:
                 car.steering_angle = 90
                 car.drive(40,1)
-                distance = car.distance
+                distance, _ = car.log_and_read_values
                 while distance > 12 or distance < 0:
-                    distance = car.distance
+                    distance, _ = car.log_and_read_values
                     print(f"{distance} , {car.steering_angle}")
-                    car.log()
                     time.sleep(.3)
                 avoid_crash(car)
+                print(f"bool= {car._bool_turn}")
                 loop_count += 1
             car.stop()
         
         elif modus == 5:
             print(modi[modus])
-            line_value = 100
             car.steering_angle = 90
-            #print(car.get_average(50))
-            #car.cali_references()
-            while True:
-                ir_data = car.read_ir_sensors
-                print(f"{ir_data}")
-                # Prüfen, ob Linie noch da ist
-                line_found = False
-                for ir in ir_data:
-                    if ir < line_value:
-                        line_found = True
-                        time_start = 0
-                if not line_found:
-                    if time_start == 0:
-                        time_start = datetime.timestamp(datetime.now())
-                    time_now = datetime.timestamp(datetime.now())
-                    print(time_now - time_start)
-                    if time_now - time_start < 2:
-                        ir_data = car.read_ir_sensors
-                        for ir in ir_data:
-                            if ir < line_value: #line found
-                                time_start = 0
-                        time.sleep(.1)
-                        continue
-                    car.steering_angle = 90
-                    car.stop()
-                    break
-                # Lenken
-                analog = np.array(ir_data)
-                min_ir = np.min(analog)
-                min_pos = np.where(analog == min_ir)[0][0]
-                print(f"min = {min_ir} Position: {min_pos}")
-                if min_pos == 0:
-                    car.steering_angle = 45
-                    car.drive(30,1)
-                elif min_pos == 1:
-                    car.steering_angle = 65
-                    car.drive(35,1)
-                elif min_pos == 2:
-                    car.steering_angle = 90
-                    car.drive(40,1)
-                elif min_pos == 3:
-                    car.steering_angle = 115
-                    car.drive(35,1)
-                elif min_pos == 4:
-                    car.steering_angle = 135
-                    car.drive(30,1)
-                time.sleep(.1)
+            follow_line(car)
+            car.stop()
+            car.steering_angle = 90
         
         elif modus == 6:
             print(modi[modus])
+            line_value = 100
+            time_start = 0
+            while True:
+                follow_line(car, line_value)
+                if time_start == 0:
+                    time_start = datetime.timestamp(datetime.now())
+                while True:
+                    time_delta = datetime.timestamp(datetime.now()) - time_start
+                    print(f"{time_delta:.2f}")
+                    if time_delta > 2.5:
+                        break
+                    _, ir_data = car.log_and_read_values
+                    print(f"{ir_data}")
+                    for ir in ir_data:
+                        if ir < line_value: #line found
+                            time_start = 0
+                            print("line found")
+                    if time_start == 0:
+                        break
+                    time.sleep(.2)
+                if time_start != 0:
+                    break
+            car.stop()
+            car.steering_angle = 90
         
         elif modus == 7:
             print(modi[modus])
 
+
         elif modus == 8:
-            #print(modi[modus])
-            run_loop = True
-            while run_loop:
-                for a in range(45, 136, 5):
-                    time.sleep(.1)
-                    car.steering_angle = a
-                    print(f"angle : {car.steering_angle}")
-                for a in range(135, 44, -5):
-                    time.sleep(.1)
-                    car.steering_angle = a
-                    print(f"angle : {car.steering_angle}")
-                run_loop = True
-        
+            print(modi[modus])
+            car.calibrate_ir()
+            while True:
+                print(f"Digital: {car.read_ir_digital} Analog: {car.read_ir_analog}")
+                time.sleep(.5)
+
+
         elif modus == 0:
             print("Ende")
             quit()
@@ -255,5 +298,5 @@ if __name__ == '__main__':
     car.usm.stop()
     # Dataframe in DB schreiben
     car.write_log_to_db()
-    print(car.df)
+    #print(car.df)
 
