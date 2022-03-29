@@ -81,15 +81,16 @@ def follow_line_anbalog(car: SensorCar, line_value: int):
             car.drive(30,1)
         time.sleep(.1)
 
-def follow_line(car: SensorCar):
-    car.steering_angle = 90
+def follow_line(car: SensorCar, with_distance :bool = False):
+    steering_angle = car.steering_angle
     a_step = 5
     b_step = 15
     c_step = 30
     d_step = 45
+    off_track_count = 0
     while True:
         # Sensoren auswerten
-        _, ir_data = car.log_and_read_values
+        distance, ir_data = car.log_and_read_values
         # Angle calculate
         if	ir_data == [0,0,1,0,0]:
             step = 0	
@@ -105,20 +106,32 @@ def follow_line(car: SensorCar):
         # straightforward
         if	ir_data == [0,0,1,0,0]:
             steering_angle = 90
+            off_track_count = 0
         # turn right
         elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
             steering_angle = int(90 - step)
+            off_track_count = 0
         # turn left
         elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
             steering_angle = int(90 + step)
+            off_track_count = 0
         
-        print(f"{ir_data} --> Lenkposition: {steering_angle}")
+        print(f"{ir_data} --> Lenkposition: {steering_angle:3} | Abstand: {distance}")
+
+        # Abstandsüberwachung
+        if with_distance:
+            if distance < 12 and distance > 0:
+                return True # Ende mit Abstandsproblem
+
         # Prüfen, ob Linie noch da ist
         if ir_data == [0,0,0,0,0]:
-            break # Schleife beenden
+            off_track_count += 1
+            print(f"off track: {off_track_count}")
+            if off_track_count > 10:
+                return False # Schleifenende ohne Abstandsproblem
         # Lenken
         car.steering_angle = steering_angle
-        time.sleep(.05)
+        time.sleep(.01)
 
 
 def main(modus, car: SensorCar):
@@ -234,39 +247,74 @@ def main(modus, car: SensorCar):
         elif modus == 5:
             print(modi[modus])
             car.steering_angle = 90
+            car.drive(30,1)
             follow_line(car)
             car.stop()
             car.steering_angle = 90
         
         elif modus == 6:
             print(modi[modus])
-            line_value = 100
-            time_start = 0
-            while True:
-                follow_line(car, line_value)
-                if time_start == 0:
-                    time_start = datetime.timestamp(datetime.now())
-                while True:
-                    time_delta = datetime.timestamp(datetime.now()) - time_start
-                    print(f"{time_delta:.2f}")
-                    if time_delta > 2.5:
-                        break
-                    _, ir_data = car.log_and_read_values
-                    print(f"{ir_data}")
-                    for ir in ir_data:
-                        if ir < line_value: #line found
-                            time_start = 0
-                            print("line found")
-                    if time_start == 0:
-                        break
-                    time.sleep(.2)
-                if time_start != 0:
-                    break
-            car.stop()
+            speed = 40
             car.steering_angle = 90
+            while True:
+                car.drive(speed,1)
+                follow_line(car)
+                # neuer lenkwinkel
+                if car.steering_angle != 90:
+                    tmp_angle =(90 - car.steering_angle)/abs(car.steering_angle - 90)
+                    tmp_angle = tmp_angle * 45 + 90
+                    car.steering_angle = tmp_angle
+                off_track_count = 0
+                car.drive(speed,-1)
+                while off_track_count < 30:
+                    _, ir_data = car.log_and_read_values
+                    print(f"{ir_data} --> Off track: {off_track_count}")
+                    if ir_data in ([0,1,1,0,0],[0,0,1,0,0],[0,0,1,1,0]):
+                        break
+                    off_track_count += 1
+                    time.sleep(0.01)
+                car.stop()
+                car.steering_angle = 90
+                if off_track_count >= 30:
+                    break
         
         elif modus == 7:
             print(modi[modus])
+            speed = 30
+            car.steering_angle = 90
+            while True:
+                car.drive(speed,1)
+                distance_fault = follow_line(car, True)
+                car.stop()
+
+                #warten, bis Hindernis aus dem Weg ist
+                while distance_fault:
+                    distance, _ = car.log_and_read_values
+                    print(f"wait for distance  > 20: {distance}")
+                    if distance > 20:
+                        break
+                    time.sleep(0.5)
+
+                # neuer lenkwinkel
+                if car.steering_angle != 90:
+                    tmp_angle =(90 - car.steering_angle)/abs(car.steering_angle - 90)
+                    tmp_angle = tmp_angle * 45 + 90
+                    car.steering_angle = tmp_angle
+                # zurück zur Linie
+                car.drive(speed,-1)
+                off_track_count = 0
+                while off_track_count < 30:
+                    _, ir_data = car.log_and_read_values
+                    print(f"{ir_data} --> Off track: {off_track_count}")
+                    if ir_data in ([0,1,1,0,0],[0,0,1,0,0],[0,0,1,1,0]):
+                        break
+                    off_track_count += 1
+                    #time.sleep(0.01)
+                car.stop()
+                car.steering_angle = 90
+                if off_track_count >= 30:
+                    break
+
 
 
         elif modus == 8:
@@ -299,4 +347,3 @@ if __name__ == '__main__':
     # Dataframe in DB schreiben
     car.write_log_to_db()
     #print(car.df)
-
