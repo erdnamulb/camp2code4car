@@ -1,5 +1,4 @@
 import sys, os, time
-from turtle import distance
 sys.path.append(os.path.dirname(sys.path[0]))
 from auto_code import SensorCar 
 
@@ -281,7 +280,7 @@ def main(modus, car: SensorCar):
         
         elif modus == 7:
             print(modi[modus])
-            speed = 40
+            speed = 30
             car.steering_angle = 90
             while True:
                 car.drive(speed,1)
@@ -310,7 +309,7 @@ def main(modus, car: SensorCar):
                     if ir_data in ([0,1,1,0,0],[0,0,1,0,0],[0,0,1,1,0]):
                         break
                     off_track_count += 1
-                    time.sleep(0.01)
+                    #time.sleep(0.01)
                 car.stop()
                 car.steering_angle = 90
                 if off_track_count >= 30:

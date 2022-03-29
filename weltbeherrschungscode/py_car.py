@@ -1,4 +1,4 @@
-import sys, os, time
+import time
 from auto_code import SensorCar 
 
 def turn_direction(car: SensorCar):
@@ -26,7 +26,6 @@ def avoid_crash(car: SensorCar):
     time.sleep(.5)
     car.steering_angle = 90
     car.drive(car._speed, 1)
-
 
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
@@ -137,4 +136,35 @@ def main(modus, car: SensorCar):
                 print(f"bool= {car._bool_turn}")
                 loop_count += 1
             car.stop()
+        
+        elif modus == 8:
+            print(modi[modus])
+            car.calibrate_ir()
+            while True:
+                print(f"Digital: {car.read_ir_digital} Analog: {car.read_ir_analog}")
+                time.sleep(.5)
+
+        elif modus == 0:
+            print("Ende")
+            quit()
+        
+        modus = None
+        break
+
+if __name__ == '__main__':
+    # car anlegen
+    car = SensorCar()
+
+    try:
+        modus = sys.argv[1]
+    except:
+        modus = None
+
+    main(modus, car)
+    car.stop()
+    car.usm.stop()
+    # Dataframe in DB schreiben
+    car.write_log_to_db()
+    #print(car.df)
+
 
