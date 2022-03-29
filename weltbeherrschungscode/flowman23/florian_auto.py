@@ -6,6 +6,45 @@ import random
 # hier kommen die drei Car Klassen her
 from auto_code import SensorCar
 
+def follow_line(car: SensorCar):
+    car.steering_angle = 90
+    #steering_angle = car.steering_angle
+    a_step = 5
+    b_step = 15
+    c_step = 30
+    d_step = 45
+    while True:
+        # Sensoren auswerten
+        _, ir_data = car.log_and_read_values
+        # Angle calculate
+        if	ir_data == [0,0,1,0,0]:
+            step = 0	
+        elif ir_data == [0,1,1,0,0] or ir_data == [0,0,1,1,0]:
+            step = a_step
+        elif ir_data == [0,1,0,0,0] or ir_data == [0,0,0,1,0]:
+            step = b_step
+        elif ir_data == [1,1,0,0,0] or ir_data == [0,0,0,1,1]:
+            step = c_step
+        elif ir_data == [1,0,0,0,0] or ir_data == [0,0,0,0,1]:
+            step = d_step
+
+        # straightforward
+        if	ir_data == [0,0,1,0,0]:
+            steering_angle = 90
+        # turn right
+        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
+            steering_angle = int(90 - step)
+        # turn left
+        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
+            steering_angle = int(90 + step)
+        
+        print(f"{ir_data} --> Lenkposition: {steering_angle}")
+        # Prüfen, ob Linie noch da ist
+        if ir_data == [0,0,0,0,0]:
+            break # Schleife beenden
+        # Lenken
+        car.steering_angle = steering_angle
+        time.sleep(.05)
 
 # Eigene Funktionen
 
@@ -26,9 +65,11 @@ def main(modus, car: SensorCar):
     #print (ref)
     
     # Hard-coded digitale Schwellenwerte IR Sensor:
-    ref = [65.85, 73.55, 76.58, 77.595, 84.835]
+    #ref = [65.85, 73.55, 76.58, 77.595, 84.835]
+    # Ist jetzt über Programm 8 einzustellen
 
-    print('------ Fahrparcours --------------------')
+    print('--' * 27)
+    print('-------------------- Fahrparcours --------------------')
     modi = {
         1: 'Fahrparcours 1 - Vorwärts und Rückwärts',
         2: 'Fahrparcours 2 - Kreisfahrt mit max. Lenkwinkel',
@@ -37,11 +78,12 @@ def main(modus, car: SensorCar):
         5: 'Fahrparcours 5 - Linienverfolgung',
         6: 'Fahrparcours 6 - Erweiterte Linienverfolgung',
         7: 'Fahrparcours 7 - 6. + Hinderniserkennung',
+        8: 'Infrarot-Sensor kalibrieren und Setting in JSON schreiben',
         0: 'Ende'
     }
 
     if modus == None:
-        print('--' * 20)
+        print('--' * 27)
         print('Auswahl:')
         for m in modi.keys():
             print('{i} - {name}'.format(i=m, name=modi[m]))
@@ -51,7 +93,7 @@ def main(modus, car: SensorCar):
 
         while modus == None:
             modus = input('Wähle (Andere Taste für Abbruch): ? ')
-            if modus in ['1', '2', '3', '4', '5', '6', '7', '0']:
+            if modus in ['1', '2', '3', '4', '5', '6', '7', '8', '0']:
                 break
             else:
                 modus = None
@@ -59,6 +101,7 @@ def main(modus, car: SensorCar):
                 quit()
         modus = int(modus)
         print('--' * 15)
+
         if modus == 1:
             print(modi[modus])
             car.drive(50,1)
@@ -83,12 +126,16 @@ def main(modus, car: SensorCar):
 
         elif modus == 3:
             print(modi[modus])
-            car.drive(20,1)
-            distance = car.distance
-            while distance > 7 or distance < 0:
-                distance = car.distance
+            car.drive(50,1)
+            distance, _ = car.log_and_read_values
+            while distance > 60 or distance < 0:
+                distance, _ = car.log_and_read_values
                 print_data(car)
-                car.log()
+                time.sleep(.3)
+            car.drive(20,1)
+            while distance > 15 or distance < 0:
+                distance, _ = car.log_and_read_values
+                print_data(car)
                 time.sleep(.3)
             car.stop()
             print("Auto angehalten")
@@ -143,21 +190,22 @@ def main(modus, car: SensorCar):
         elif modus == 5:
             print(modi[modus])
             distance = car.distance
-            car.irm.set_references(ref)
+            #car.irm.set_references(ref)
             print ("Eingestellte digitale IR-Schwellenwerte:", car.irm._references)
-            while distance > 7 or distance < 0:
+            print('--' * 15)
+            """while distance > 7 or distance < 0:
                 distance = car.distance
-                print(car.read_ir_sensors)                
-                print(car.irm.read_digital())
+                print(car.read_ir_analog)                
+                print(car.read_ir_digital)
                 print("hell" if car.irm.read_digital()[0] == 0 else "dunkel",\
                         ",hell" if car.irm.read_digital()[1] == 0 else ",dunkel",\
                         ",hell" if car.irm.read_digital()[2] == 0 else ",dunkel",\
                         ",hell" if car.irm.read_digital()[3] == 0 else ",dunkel",\
                         ",hell" if car.irm.read_digital()[4] == 0 else ",dunkel",)
                 print("-----")
-
                 car.log()
-                time.sleep(.5)
+                time.sleep(.5)"""
+            follow_line(car)
             car.stop()
             print("Auto angehalten")
         
@@ -167,6 +215,11 @@ def main(modus, car: SensorCar):
         elif modus == 7:
             print(modi[modus])
         
+        elif modus == 8:
+            print(modi[modus])
+            car.calibrate_ir()
+
+
         elif modus == 0:
             print("Ende")
             quit()
