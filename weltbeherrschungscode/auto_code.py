@@ -14,8 +14,7 @@ class BaseCar():
         self._bool_turn = True
         
         try:
-            path= os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code')
-            with open(path +"/config.json", "r") as f:
+            with open(sys.path[0] + "/config.json", "r") as f:
                 data = json.load(f)
                 turning_offset = data["turning_offset"]
                 forward_A = data["forward_A"]
@@ -105,12 +104,12 @@ class SensorCar(SonicCar):
 
         # IR anlegen
         try:
-            path= os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code')
-            with open(path +"/config.json", "r") as f:
+            with open(sys.path[0] + "/config.json", "r") as f:
                 data = json.load(f)
                 ir_references = data["ir_references"]
                 print("IR References: ", ir_references)
         except:
+            ir_references = [100, 100, 100, 100, 100]
             print("config.json nicht gefunden")
         
         self.irm = Infrared(ir_references)
@@ -161,11 +160,10 @@ class SensorCar(SonicCar):
     def calibrate_ir(self):
         self.irm.cali_references()
 
-        path= os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code')
-        with open(path +"/config.json") as fin:
+        with open(sys.path[0] + "/config.json") as fin:
             data = json.load(fin)
             
-        with open(path +"/config.json", "w") as fout:
+        with open(sys.path[0] + "/config.json", "w") as fout:
             data['ir_references'] = list(self.irm._references)
             fout.write(json.dumps(data))
 

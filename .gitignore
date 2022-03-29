@@ -1,8 +1,5 @@
-camp2code-project_phase_1/Code/.gitignore
 weltbeherrschungscode/Stefan/basisklassen.py
-weltbeherrschungscode/Stefan/config.json
 camp2code-project_phase_1/Code/__pycache__/basisklassen.cpython-37.pyc
-camp2code-project_phase_1/Code/config.json
 weltbeherrschungscode/Stefan/__pycache__/basisklassen.cpython-37.pyc
 weltbeherrschungscode/Stefan/__pycache__/loggingc2c.cpython-37.pyc
 weltbeherrschungscode/Stefan/logdata.sqlite
@@ -20,7 +17,6 @@ weltbeherrschungscode/config.json
 weltbeherrschungscode/Stefan/__pycache__/auto_code.cpython-37.pyc
 weltbeherrschungscode/flowman23/auto_code.py
 weltbeherrschungscode/Allan/1.1_dash_example_1.py
-.gitignore
 weltbeherrschungscode/Allan/2.0_callbacks.py
 weltbeherrschungscode/Allan/3.0_boot_strap.py
 weltbeherrschungscode/Allan/__pycache__/dash.cpython-38.pyc
