@@ -1,4 +1,6 @@
 import sys, os, time
+
+from numpy import int16
 sys.path.append(os.path.dirname(sys.path[0]))
 
 import random
@@ -6,14 +8,16 @@ import random
 # hier kommen die drei Car Klassen her
 from auto_code import SensorCar
 
-def follow_line(car: SensorCar):
+def follow_line(car: SensorCar, runs: int = 200, sleep: float = 0.01):
     car.steering_angle = 90
-    #steering_angle = car.steering_angle
+    steering_angle = car.steering_angle
     a_step = 5
     b_step = 15
     c_step = 30
     d_step = 45
-    while True:
+    i = 1
+    count = 0
+    while i <= runs:
         # Sensoren auswerten
         _, ir_data = car.log_and_read_values
         # Angle calculate
@@ -31,20 +35,29 @@ def follow_line(car: SensorCar):
         # straightforward
         if	ir_data == [0,0,1,0,0]:
             steering_angle = 90
+            count = 0
         # turn right
         elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
             steering_angle = int(90 - step)
+            count = 0
         # turn left
         elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
             steering_angle = int(90 + step)
+            count = 0
         
-        print(f"{ir_data} --> Lenkposition: {steering_angle}")
+        print(f"{ir_data} --> Lenkposition: {steering_angle}", " -- Messung:", i)
         # Prüfen, ob Linie noch da ist
+        
         if ir_data == [0,0,0,0,0]:
-            break # Schleife beenden
+            count += 1
+            if count > 30:
+                break
+                # Schleife beenden, wenn x mal keine Linie gefuden
+
         # Lenken
         car.steering_angle = steering_angle
-        time.sleep(.05)
+        time.sleep(sleep)
+        i += 1
 
 # Eigene Funktionen
 
@@ -148,26 +161,26 @@ def main(modus, car: SensorCar):
             while i <= anzahl_durchlauf:
                 print("--" * 10)
                 print("Durchlauf:", i, "von", anzahl_durchlauf)
-                set_distance = 7
+                set_distance = 30
                 print("Fahre Vorwärts bis Abstand:", set_distance)
                 car.steering_angle = 90
-                car.drive(20,1)
-                distance = car.distance
+                car.drive(40,1)
+                distance, _ = car.log_and_read_values
                 while distance > set_distance or distance < 0:
-                    distance = car.distance
-                    #print_data(car)
+                    distance, _ = car.log_and_read_values
+                    print_data(car)
                     car.log()
                     time.sleep(.5)
                 print("Hindernis erkannt - Auto angehalten")
                 car.stop()
                 time.sleep(1.0)
 
-                set_distance = 20
+                set_distance = 60
                 print("Fahre Rückwärts bis Abstand:", set_distance)
-                car.drive(20, -1)
+                car.drive(40, -1)
                 while distance < set_distance:
-                    distance = car.distance
-                    #print_data(car)
+                    distance, _ = car.log_and_read_values
+                    print_data(car)
                     car.log()
                     time.sleep(.5)
                 time.sleep(.5)
@@ -175,12 +188,12 @@ def main(modus, car: SensorCar):
                 car.steering_angle = random.randint(45,135)
                 print("Lenkwinkel:", car.steering_angle)
 
-                set_distance = 40
+                set_distance = set_distance + 30
                 print("Fahre Rückwärts bis Abstand:", set_distance)
-                car.drive(20, -1)
+                car.drive(40, -1)
                 while distance < set_distance:
-                    distance = car.distance
-                    #print_data(car)
+                    distance, _ = car.log_and_read_values
+                    print_data(car)
                     car.log()
                     time.sleep(.5)
                 time.sleep(.5)            
@@ -189,12 +202,12 @@ def main(modus, car: SensorCar):
            
         elif modus == 5:
             print(modi[modus])
-            distance = car.distance
+            distance, _ = car.log_and_read_values
             #car.irm.set_references(ref)
             print ("Eingestellte digitale IR-Schwellenwerte:", car.irm._references)
             print('--' * 15)
             """while distance > 7 or distance < 0:
-                distance = car.distance
+                distance, _ = car.log_and_read_values
                 print(car.read_ir_analog)                
                 print(car.read_ir_digital)
                 print("hell" if car.irm.read_digital()[0] == 0 else "dunkel",\
@@ -205,12 +218,32 @@ def main(modus, car: SensorCar):
                 print("-----")
                 car.log()
                 time.sleep(.5)"""
-            follow_line(car)
+            car.drive(40,1)
+            follow_line(car, 500, 0.005)
             car.stop()
             print("Auto angehalten")
         
         elif modus == 6:
             print(modi[modus])
+
+            distance, _ = car.log_and_read_values
+            print ("Eingestellte digitale IR-Schwellenwerte:", car.irm._references)
+            print('--' * 15)
+            while distance > 7 or distance < 0:
+                distance, _ = car.log_and_read_values
+                print(car.read_ir_analog)                
+                print(car.read_ir_digital)
+                print("hell" if car.irm.read_digital()[0] == 0 else "dunkel",\
+                        ",hell" if car.irm.read_digital()[1] == 0 else ",dunkel",\
+                        ",hell" if car.irm.read_digital()[2] == 0 else ",dunkel",\
+                        ",hell" if car.irm.read_digital()[3] == 0 else ",dunkel",\
+                        ",hell" if car.irm.read_digital()[4] == 0 else ",dunkel",)
+                print("-----")
+                car.log()
+                time.sleep(.5)
+
+            car.stop()
+            print("Auto angehalten")
         
         elif modus == 7:
             print(modi[modus])
