@@ -169,7 +169,6 @@ def main(modus, car: SensorCar):
                 while distance > set_distance or distance < 0:
                     distance, _ = car.log_and_read_values
                     print_data(car)
-                    car.log()
                     time.sleep(.5)
                 print("Hindernis erkannt - Auto angehalten")
                 car.stop()
@@ -181,7 +180,6 @@ def main(modus, car: SensorCar):
                 while distance < set_distance:
                     distance, _ = car.log_and_read_values
                     print_data(car)
-                    car.log()
                     time.sleep(.5)
                 time.sleep(.5)
                                 
@@ -194,7 +192,6 @@ def main(modus, car: SensorCar):
                 while distance < set_distance:
                     distance, _ = car.log_and_read_values
                     print_data(car)
-                    car.log()
                     time.sleep(.5)
                 time.sleep(.5)            
                 
@@ -216,7 +213,6 @@ def main(modus, car: SensorCar):
                         ",hell" if car.irm.read_digital()[3] == 0 else ",dunkel",\
                         ",hell" if car.irm.read_digital()[4] == 0 else ",dunkel",)
                 print("-----")
-                car.log()
                 time.sleep(.5)"""
             car.drive(40,1)
             follow_line(car, 500, 0.005)
@@ -239,7 +235,6 @@ def main(modus, car: SensorCar):
                         ",hell" if car.irm.read_digital()[3] == 0 else ",dunkel",\
                         ",hell" if car.irm.read_digital()[4] == 0 else ",dunkel",)
                 print("-----")
-                car.log()
                 time.sleep(.5)
 
             car.stop()
