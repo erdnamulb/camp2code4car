@@ -1,7 +1,4 @@
-from multiprocessing import Value
-import sys, os
-from cgi import test
-from xml.sax.handler import feature_string_interning
+import sys
 import dash
 import pandas as pd
 from dash import dcc
@@ -15,9 +12,9 @@ import datetime as dt
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 df = pd.DataFrame()
-conn = connect(f'{sys.path[0]}/logdata.sqlite')
+conn = connect(f'{sys.path[0]}/P5_45speed_5ms_300_q.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
-df = df[df['timestamp' != '0']]   # Zeilen mit 0 im Zeitstempel ausfiltern
+df = df[df['timestamp'] != '0']   # Zeilen mit 0 im Zeitstempel ausfiltern
 # print(df)
 df['time'] = df.apply(
     lambda row: dt.datetime.fromtimestamp(float(row.timestamp)), axis=1)
