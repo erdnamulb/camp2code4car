@@ -1,15 +1,34 @@
-import time
+import sys, time
 from auto_code import SensorCar 
+
+def drive_with_log(car: SensorCar, speed: int, direction: int, steering_angle: int, duration: int):
+    """drive in defined direction
+    Args:
+            speed (int): drive speed
+            direction(int): 1 = forward, -1 = backward
+            steering_angle(int): direction of travel of the front wheels (90 = straight forward)
+            duration(int): time to travel in definded direction
+    """
+    car.steering_angle = steering_angle
+    car.drive(speed,direction)
+    time_start = time.time()
+    while time.time() - time_start < duration:
+        print(f"spped: {car._speed:3}, direction: {car._direction:2}, steering angele: {car.steering_angle:3}, time: {(time.time() - time_start):.2f}")
+        time.sleep(.2)
+    car.stop()
+
 
 def turn_direction(car: SensorCar):
     """The function alternately returns the two end stops of the steering
+    Returns:
+            [int]: returns alternately 45° an 135°
     """
     if car._bool_turn:
-        angle = 45
+        turn_angle = 45
     else:
-        angle = 135
+        turn_angle = 135
     car._bool_turn = not car._bool_turn
-    return angle
+    return turn_angle
 
 def avoid_crash(car: SensorCar):
     """The function is intended to avoid a crash. 
@@ -17,20 +36,73 @@ def avoid_crash(car: SensorCar):
     The vehicle then continues straight ahead.
     """
     car.stop()
-    time.sleep(.5)
-    car.drive(car._speed,-1)
-    time.sleep(1)
-    car.steering_angle = turn_direction(car)
-    time.sleep(2)
-    car.stop()
-    time.sleep(.5)
+    drive_with_log(car, speed=car._speed, direction=-1, steering_angle=90, duration=1)
+    drive_with_log(car, speed=car._speed, direction=-1, steering_angle=turn_direction(car), duration=2)
     car.steering_angle = 90
     car.drive(car._speed, 1)
 
+def follow_line(car: SensorCar, with_distance :bool = False):
+    """Function to follow lines using the IR sensors
+    Args:
+            with_distance (bool): activates or deactivates distance monitoring
+    Returns:
+            [bool]: returns reason for aborting. 
+                True  = Stop due to obstacle (ultrasonic sensors)
+                False = Stop due to lost line (infrared sensors)
+    """
+    steering_angle = car.steering_angle
+    a_step = 5
+    b_step = 15
+    c_step = 30
+    d_step = 45
+    off_track_count = 0
+    while True:
+        # Sensoren auswerten
+        distance, ir_data = car.log_and_read_values
+        # Angle calculate
+        if	ir_data == [0,0,1,0,0]:
+            step = 0	
+        elif ir_data == [0,1,1,0,0] or ir_data == [0,0,1,1,0]:
+            step = a_step
+        elif ir_data == [0,1,0,0,0] or ir_data == [0,0,0,1,0]:
+            step = b_step
+        elif ir_data == [1,1,0,0,0] or ir_data == [0,0,0,1,1]:
+            step = c_step
+        elif ir_data == [1,0,0,0,0] or ir_data == [0,0,0,0,1]:
+            step = d_step
+
+        # straightforward
+        if	ir_data == [0,0,1,0,0]:
+            steering_angle = 90
+            off_track_count = 0
+        # turn right
+        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
+            steering_angle = int(90 - step)
+            off_track_count = 0
+        # turn left
+        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
+            steering_angle = int(90 + step)
+            off_track_count = 0
+        
+        print(f"{ir_data} --> Lenkposition: {steering_angle:3} | Abstand: {distance}")
+
+        # Abstandsüberwachung
+        if with_distance:
+            if distance < 12 and distance > 0:
+                return True # Ende mit Abstandsproblem
+
+        # Prüfen, ob Linie noch da ist
+        if ir_data == [0,0,0,0,0]:
+            off_track_count += 1
+            print(f"off track: {off_track_count}")
+            if off_track_count > 10:
+                return False # Ende ohne Abstandsproblem
+        # Lenken
+        car.steering_angle = steering_angle
+        time.sleep(.01)
+
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
-
-
     Args:
         modus (int): The mode that can be choosen by the user
     """
@@ -65,7 +137,7 @@ def main(modus, car: SensorCar):
                 #quit()
         modus = int(modus)
 
-        if modus == 1:
+        if modus == 1: #'Fahrparcours 1 - Vorwärts und Rückwärts'
             print(modi[modus])
             car.steering_angle = 90
             print("vorwärts")
@@ -80,72 +152,64 @@ def main(modus, car: SensorCar):
             print("stopp")
             car.stop()
 
-        elif modus == 2:
+        elif modus == 2: #'Fahrparcours 2 - Kreisfahrt mit max. Lenkwinkel'
             print(modi[modus])
-            car.steering_angle = 90
-            time.sleep(.3)
-            print("vorwärts")
-            car.drive(40,1)
-            time.sleep(1)
-            car.stop()
-            time.sleep(.5)
-            print("Uhrzeigersinn")
-            car.steering_angle = 135
-            time.sleep(.3)
-            car.drive(40,1)
-            wait_with_angle(10, 135)
-            car.stop()
-            car.steering_angle = 90
-            time.sleep(1)
-            print("Zurück")
-            car.steering_angle = 135
-            time.sleep(.3)
-            car.drive(40,-1)
-            wait_with_angle(10, 135)
-            car.stop()
-            time.sleep(.5)
-            print("Rückwärts")
-            car.steering_angle = 90
-            car.drive(30,-1)
-            time.sleep(1)
-            car.stop()
-            
+            loop_count = 0
+            while loop_count < 2:
+                if loop_count == 0:
+                    print("--- Uhrzeigersinn ---")
+                    turn_angle = 130
+                else:
+                    print("--- gegehn Uhrzeigersinn ---")
+                    turn_angle = 50
 
-        elif modus == 3:
+                print("vorwärts")
+                drive_with_log(car, speed=40, direction=1, steering_angle=90, duration=1)
+                time.sleep(.5)
+                print("Einschlagen")
+                drive_with_log(car, speed=40, direction=1, steering_angle=turn_angle, duration=8)
+                time.sleep(1)
+                print("Zurück")
+                drive_with_log(car, speed=40, direction=-1, steering_angle=turn_angle, duration=8)
+                time.sleep(.5)
+                print("Rückwärts")
+                drive_with_log(car, speed=40, direction=-1, steering_angle=90, duration=1)
+                loop_count += 1
+
+
+        elif modus == 3: #'Fahrparcours 3 - Vorwärtsfahrt bis Hindernis'
             print(modi[modus])
             distance, _ = car.log_and_read_values
             car.drive(40,1)
             while distance > 7 or distance < 0:
                 distance, _ = car.log_and_read_values
-                print(distance)
+                print(f"distance: {distance}")
                 time.sleep(.3)
             car.stop()
 
-        elif modus == 4:
+        elif modus == 4: #'Fahrparcours 4 - Erkundungstour'
             print(modi[modus])
             loop_count = 0
-            while loop_count < 2:
+            while loop_count < 4:
                 car.steering_angle = 90
                 car.drive(40,1)
                 distance, _ = car.log_and_read_values
                 while distance > 12 or distance < 0:
                     distance, _ = car.log_and_read_values
-                    print(f"{distance} , {car.steering_angle}")
+                    print(f"distance {distance}")
                     time.sleep(.3)
                 avoid_crash(car)
-                print(f"bool= {car._bool_turn}")
                 loop_count += 1
             car.stop()
         
-        elif modus == 8:
+        elif modus == 8: #'IR - Sensoren Kalibrieren'
             print(modi[modus])
             car.calibrate_ir()
             while True:
                 print(f"Digital: {car.read_ir_digital} Analog: {car.read_ir_analog}")
                 time.sleep(.5)
 
-        elif modus == 0:
-            print("Ende")
+        elif modus == 0: #Ende
             quit()
         
         modus = None
@@ -154,7 +218,8 @@ def main(modus, car: SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = SensorCar()
-
+    
+    # ggf. Inputs übernehmen
     try:
         modus = sys.argv[1]
     except:

@@ -1,8 +1,6 @@
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(sys.path[0])), 'camp2code-project_phase_1', 'Code'))
+import sys
 from basisklassen import *
 import loggingc2c as log
-
 
 class BaseCar():
     """Base Class to define the car movement
@@ -13,6 +11,7 @@ class BaseCar():
         self._direction = 0
         self._bool_turn = True
         
+        # Load config.json part 1
         try:
             with open(sys.path[0] + "/config.json", "r") as f:
                 data = json.load(f)
@@ -97,12 +96,13 @@ class SensorCar(SonicCar):
 
     def __init__(self):
         super().__init__()
+
         # Setup DataFrame and DataBase
         self.df = log.init_dataframe()
         self._db_path = f"{sys.path[0]}/logdata.sqlite"
         log.makedatabase_singletable(self._db_path)
 
-        # IR anlegen
+        # Load config.json part 2: IR-references
         try:
             with open(sys.path[0] + "/config.json", "r") as f:
                 data = json.load(f)
@@ -114,7 +114,6 @@ class SensorCar(SonicCar):
         
         self.irm = Infrared(ir_references)
             
-       
     def drive(self, speed: int, direction: int):
         """Overloaded function from BaseCar. Added loggin
         """
@@ -140,7 +139,6 @@ class SensorCar(SonicCar):
         super().stop()
         self.log()
 
-    
     @property
     def read_ir_analog(self) -> list:
         """Reads the value of the infrared module as analog.
@@ -166,9 +164,7 @@ class SensorCar(SonicCar):
         with open(sys.path[0] + "/config.json", "w") as fout:
             data['ir_references'] = list(self.irm._references)
             fout.write(json.dumps(data))
-
         print(data)
-
 
     def log(self):
         """Function to create log entries in the dataframe
@@ -177,13 +173,12 @@ class SensorCar(SonicCar):
 
     @property
     def log_and_read_values(self):
-        """Function to read IR values, US values and write log to dataframe
+        """Function to read IR values, ultra sonic values and write log to dataframe
         """
         distance = self.distance
         ir_sensors = self.read_ir_digital
         log.add_row_df(self.df, distance, ir_sensors , self.speed, self.direction, self.steering_angle)
         return distance, ir_sensors
-
 
     def write_log_to_db(self):
         """Function to save log Dataframe to sqlite DB
