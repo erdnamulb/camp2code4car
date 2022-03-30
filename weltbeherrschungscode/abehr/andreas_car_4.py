@@ -1,4 +1,4 @@
-import sys, os, time
+import sys, os, time, random
 sys.path.append(os.path.dirname(sys.path[0]))
 from auto_code import SensorCar 
 
@@ -22,7 +22,7 @@ def line_follow(car: SensorCar, with_distance :bool = False):
 
     while True:
         lt_status_now = car.irm.read_digital()
-        #print(lt_status_now)
+        print(lt_status_now)
         # Winkelberechnung
         if	lt_status_now == [0,0,1,0,0]:
             step = 0	
@@ -60,8 +60,25 @@ def line_follow(car: SensorCar, with_distance :bool = False):
         car.steering_angle =turning_angle
         time.sleep(delay)  
         
-
-        
+def line_finder(car: SensorCar):
+    ranbool = random.choice([True, False])
+    if ranbool == True:
+        car.steering_angle = 45
+    else:
+        car.steering_angle = 135
+    ranbool = random.choice([True, False])
+    if ranbool == True:
+        car.drive(30,-1)
+    else:
+        car.drive(30, 1)
+    findmax = 0
+    while findmax <40:
+        findmax += 1
+        lt_status = car.irm.read_digital()
+        if lt_status[2] == 1:
+            break
+    car.stop()
+    car.steering_angle = 90
 
 
 
@@ -177,6 +194,28 @@ def main(modus, car: SensorCar):
         
         elif modus == 5:
             print(modi[modus])
+            car.drive(30,1)
+            line_follow(car)
+            car.stop()
+            car.steering_angle = 90
+            
+        
+        elif modus == 6:
+            print(modi[modus])
+            num = 0
+            while num <10:
+                num += 1
+                car.drive(30,1)
+                line_follow(car)
+                line_finder(car)
+            line_follow(car)
+            car.stop()
+
+            
+            
+        
+        elif modus == 7:
+            print(modi[modus])
             sens = car.irm.read_digital()
             print(sens)
             delay = 0.0005
@@ -251,15 +290,6 @@ def main(modus, car: SensorCar):
                 time.sleep(delay)
                 car.log()
             car.stop()
-        
-        elif modus == 6:
-            print(modi[modus])
-            car.drive(30,1)
-            line_follow(car)
-            
-        
-        elif modus == 7:
-            print(modi[modus])
 
         elif modus == 8:
             #print(modi[modus])
