@@ -1,166 +1,66 @@
 import sys, os
-from cgi import test
-import dash
-import pandas as pd
-from dash import dcc
-from dash import html
-import plotly.express as px
-from dash.dependencies import Input, Output
-import dash_bootstrap_components as dbc
-from sqlite3 import connect
-import datetime as dt
+sys.path.append(os.path.dirname(sys.path[0]))
+from auto_code import SensorCar 
+from andreas_car_0_2 import main
 
+from dash import Dash, html, Input, Output, callback_context
 
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-df = pd.DataFrame()
-conn = connect('logdata.sqlite')
-df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
-df = df.iloc[1: , : ]
-print(df)
-fig = px.scatter(df, x="timestamp", y="distance")
+app = Dash(__name__)
 
-speed_max = df['speed'].max()
-speed_min = df['speed'].min()
-speed_mean = df['speed'].mean()
-time_start = dt.datetime.fromtimestamp(float(df['timestamp'].min()))
-time_stop = dt.datetime.fromtimestamp(float(df['timestamp'].max()))
-duration = time_stop - time_start
-drivetime_tot = duration.total_seconds()
-drivetime_str = str(drivetime_tot) + " s"
-distance_tot = drivetime_tot * speed_mean * (30/40) # ca. 30cm bei Geschwindigkeit 40 pro s
-distance_str = str(distance_tot) + " cm"
-
-card_speed_max = dbc.Card(
-    [
-        dbc.CardBody(
-            [
-                html.H3("v_max", className="card-title"),
-                html.P(
-                    speed_max,
-                    className="card-text",
-                ),
-            ]
-        ),
-    ],
-    style={"width": "18rem"}, color="primary", inverse=True,
-)
-
-card_speed_min = dbc.Card(
-    [
-        dbc.CardBody(
-            [
-                html.H3("v_min", className="card-title"),
-                html.P(
-                    speed_min,
-                    className="card-text",
-                ),
-            ]
-        ),
-    ],
-    style={"width": "18rem"}, color="primary", inverse=True,
-)
-
-card_speed_mean = dbc.Card(
-    [
-        dbc.CardBody(
-            [
-                html.H3("v_avg", className="card-title"),
-                html.P(
-                    speed_mean,
-                    className="card-text",
-                ),
-            ]
-        ),
-    ],
-    style={"width": "18rem"}, color="primary", inverse=True,
-)
-
-card_drivetime_tot = dbc.Card(
-    [
-        dbc.CardBody(
-            [
-                html.H3("Gesamtzeit", className="card-title"),
-                html.P(
-                    drivetime_str,
-                    className="card-text",
-                ),
-            ]
-        ),
-    ],
-    style={"width": "18rem"}, color="secondary", inverse=True,
-)
-
-card_distance_tot = dbc.Card(
-    [
-        dbc.CardBody(
-            [
-                html.H3("Gesamtstrecke", className="card-title"),
-                html.P(
-                    distance_str,
-                    className="card-text",
-                ),
-            ]
-        ),
-    ],
-    style={"width": "18rem"}, color="secondary", inverse=True,
-)
-
-
-
-
-
-app.layout = html.Div(
-    children=[
-        html.H1(id='H1',
-                children='Sensordaten Cockpit',
-                style={'textAlign': 'center', 'marginTop': 40, 'marginBottom': 40}),
-        html.H4(id='H2',
-                children='Datenübersicht SensorCar',
-                ),
-        html.Div(children='Laberrhabarber',
-                style={'marginTop': 10, 'marginLeft': 40}),
-        html.Br(),
-        html.Div(
-            children=[
-                dbc.Row([
-                dbc.Col([card_speed_max], width=3),
-                dbc.Col([card_speed_min], width=3),
-                dbc.Col([card_speed_mean], width=3),
-                ], align='center'),
-                html.Br(),
-                dbc.Row([
-                dbc.Col([card_drivetime_tot], width=3),
-                dbc.Col([card_distance_tot], width=3),
-                ], align='center')
-            ], style={'marginTop': 10, 'marginLeft': 40}
-        ),
-        html.Br(),
-        dcc.Graph(figure=fig),
-        html.Br(),
-        html.Div(
-                [
-                dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', value=2),
-                dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', value=3),
-                dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', value=4),
-                html.Span(id='status-output', style={"verticalAlign": "middle"}),
-                ], style={'marginTop': 10, 'marginLeft': 40}
-                ), 
-    ]
-)
+app.layout = html.Div([
+    html.Button('Prog 0', id='btn-nclicks-0', n_clicks=0),
+    html.Button('Prog 1', id='btn-nclicks-1', n_clicks=0),
+    html.Button('Prog 2', id='btn-nclicks-2', n_clicks=0),    
+    html.Button('Prog 3', id='btn-nclicks-3', n_clicks=0),
+    html.Button('Prog 4', id='btn-nclicks-4', n_clicks=0),
+    html.Button('Prog 5', id='btn-nclicks-5', n_clicks=0),
+    html.Button('Prog 6', id='btn-nclicks-6', n_clicks=0),
+    html.Button('Prog 7', id='btn-nclicks-7', n_clicks=0),
+    html.Div(id='container-button-timestamp')
+])
 
 @app.callback(
-    Output('status-output', 'children'), 
-    #Output('status-output', 'children'), 
-    #Output('status-output', 'children'), 
-    [Input('startbutton-2', 'value')],
-    [Input('startbutton-3', 'value')],
-    [Input('startbutton-4', 'value')]
+    Output('container-button-timestamp', 'children'),
+    Input('btn-nclicks-0', 'n_clicks'),
+    Input('btn-nclicks-1', 'n_clicks'),
+    Input('btn-nclicks-2', 'n_clicks'),
+    Input('btn-nclicks-3', 'n_clicks'),
+    Input('btn-nclicks-4', 'n_clicks'),
+    Input('btn-nclicks-5', 'n_clicks'),
+    Input('btn-nclicks-6', 'n_clicks'),
+    Input('btn-nclicks-7', 'n_clicks')
 )
-def on_button_click(value):
-    # Testdrive.py aufrufen mit entsprechendem Argument
-    text = 'Fahrprogramm {} wird gestartet.'.format(value)
-    return text
-
+def displayClick(btn0,btn1,btn2,btn3, btn4, btn5, btn6, btn7):
+    changed_id = [p['prop_id'] for p in callback_context.triggered][0]
+    car = SensorCar()
+    if 'btn-nclicks-3' in changed_id:
+        msg = 'Prog 3 wurde ausgeführt'
+        main(3, car)
+        #print(car.df)
+    elif 'btn-nclicks-4' in changed_id:
+        msg = 'Prog 4 wurde ausgeführt'
+        main(4, car)
+    elif 'btn-nclicks-5' in changed_id:
+        msg = 'Prog 5 wurde ausgeführt'
+        main(5, car)
+    elif 'btn-nclicks-6' in changed_id:
+        msg = 'Prog 6 wurde ausgeführt'
+        main(6, car)
+    elif 'btn-nclicks-0' in changed_id:
+        msg = 'Prog 0 wurde ausgeführt'
+        main(0, car)
+    elif 'btn-nclicks-1' in changed_id:
+        msg = 'Prog 1 wurde ausgeführt'
+        main(1, car)
+    elif 'btn-nclicks-2' in changed_id:
+        msg = 'Prog 2 wurde ausgeführt'
+        main(2, car)
+    elif 'btn-nclicks-7' in changed_id:
+        msg = 'Prog 7 wurde ausgeführt'
+        main(7, car)
+    else:
+        msg = 'None of the buttons have been clicked yet'
+    return html.Div(msg)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
