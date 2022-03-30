@@ -96,7 +96,7 @@ def follow_line(car: SensorCar, with_distance :bool = False):
             off_track_count += 1
             print(f"off track: {off_track_count}")
             if off_track_count > 10:
-                return False # Ende ohne Abstandsproblem
+                return False # Ende wegen fehlender Linie
         # Lenken
         car.steering_angle = steering_angle
         time.sleep(.01)
@@ -218,7 +218,7 @@ def main(modus, car: SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = SensorCar()
-    
+        
     # ggf. Inputs übernehmen
     try:
         modus = sys.argv[1]
