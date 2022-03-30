@@ -52,8 +52,8 @@ def follow_line(car: SensorCar, with_distance :bool = False):
     """
     steering_angle = car.steering_angle
     a_step = 5
-    b_step = 15
-    c_step = 30
+    b_step = 25
+    c_step = 35
     d_step = 45
     off_track_count = 0
     while True:
@@ -100,6 +100,35 @@ def follow_line(car: SensorCar, with_distance :bool = False):
         # Lenken
         car.steering_angle = steering_angle
         time.sleep(.01)
+
+def back_to_line(car: SensorCar):
+    """Function drives the car back onto the line. 
+       The steering is turned in the opposite direction and car drive backwards.
+       Until line found in middle or timeout reached
+    Returns:
+            [int]: returns off_track_count (Timeout) 
+                If off_track_count > 30 Programm can be stoped
+    """
+    # in den entgegengesetzten Lenkanschlag lenken
+    if car.steering_angle != 90:
+        tmp_angle =(90 - car.steering_angle)/abs(car.steering_angle - 90)
+        tmp_angle = tmp_angle * 45 + 90
+        car.steering_angle = tmp_angle
+        
+    # zurück zur Linie
+    off_track_count = 0
+    car.drive(30,-1)
+    while off_track_count < 30:
+        _, ir_data = car.log_and_read_values
+        print(f"{ir_data} --> Off track: {off_track_count}")
+        if ir_data in ([0,1,1,0,0],[0,0,1,0,0],[0,0,1,1,0]):
+            break
+        off_track_count += 1
+        #time.sleep(0.01)
+    car.stop()
+    car.steering_angle = 90
+    return off_track_count
+
 
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
@@ -202,12 +231,64 @@ def main(modus, car: SensorCar):
                 loop_count += 1
             car.stop()
         
+        elif modus == 5: #'Fahrparcours 5 - Linienverfolgung'
+            print(modi[modus])
+            car.steering_angle = 90
+            car.drive(30,1)
+            follow_line(car)
+            car.stop()
+            car.steering_angle = 90
+        
+        elif modus == 6: #'Fahrparcours 6 - Erweiterte Linienverfolgung'
+            print(modi[modus])
+            #Parameter setzen
+            speed = 30
+
+            car.steering_angle = 90
+            while True:
+                # Linie folgen
+                car.drive(speed,1)
+                follow_line(car)
+
+                #zurück zur Linie
+                off_track_count = back_to_line(car)
+
+                # Abbruch, wenn keine Line gefunden
+                if off_track_count >= 30:
+                    break
+
+        
+        elif modus == 7:
+            print(modi[modus])
+            #Parameter setzen
+            speed = 35
+
+            car.steering_angle = 90
+            while True:
+                # Linie folgen
+                car.drive(speed,1)
+                distance_fault = follow_line(car, True)
+
+                #warten, bis Hindernis aus dem Weg ist
+                car.stop()
+                while distance_fault:
+                    distance, _ = car.log_and_read_values
+                    print(f"wait for distance  > 20: {distance}")
+                    if distance > 20:
+                        break
+                    time.sleep(0.5)
+
+                #zurück zur Linie
+                off_track_count = back_to_line(car)
+
+                # Abbruch, wenn keine Line gefunden
+                if off_track_count >= 30:
+                    break
+
         elif modus == 8: #'IR - Sensoren Kalibrieren'
             print(modi[modus])
             car.calibrate_ir()
-            while True:
-                print(f"Digital: {car.read_ir_digital} Analog: {car.read_ir_analog}")
-                time.sleep(.5)
+            
 
         elif modus == 0: #Ende
             quit()
