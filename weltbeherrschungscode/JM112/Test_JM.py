@@ -27,7 +27,7 @@ def linienfahrt():
             irm_status = car.irm.read_digital()
             print(irm_status)
 
-            #Lenkwinkel ermitteln
+            #benötigter Lenkwinkel ermitteln
             if irm_status == [0, 0, 1, 0, 0]:
                 angle = 0
                 print(0)
@@ -63,6 +63,72 @@ def linienfahrt():
                     car.stop()
                     print("fehlende Fahrbahn")
                     break
+
+
+def linienfahrt_Hindernisserkennung():
+    
+
+        a_angle = 3
+        b_angle = 10
+        c_angle = 30
+        d_angle = 45
+
+        off_track_count = 0
+
+        #car.drive(40, 1)
+
+        while True:
+            if car.distance >= 12 or car.distance < 0:
+                time.sleep(.01)
+                irm_status = car.irm.read_digital()
+                print(irm_status)
+
+                #benötigter Lenkwinkel ermitteln
+                if irm_status == [0, 0, 1, 0, 0]:
+                    angle = 0
+                    print(0)
+                elif irm_status == [0, 1, 1, 0, 0] or irm_status == [0, 0, 1, 1, 0]:
+                    angle = a_angle
+                    print("a")
+                elif irm_status == [0, 1, 0, 0, 0] or irm_status == [0, 0, 0, 1, 0]:
+                    angle = b_angle
+                    print("b")
+                elif irm_status == [1, 1, 0, 0, 0] or irm_status == [0, 0, 0, 1, 1]:
+                    angle = c_angle
+                    print("c")
+                elif irm_status == [1, 0, 0, 0, 0] or irm_status == [0, 0, 0, 0, 1]:
+                    angle = d_angle
+                    print("d")
+
+                #Lenkwinkel einstellen
+                if irm_status == [0, 0, 1, 0, 0]:
+                    car.steering_angle = 90
+                    off_track_count = 0
+                    print(90)
+                elif irm_status in ([0, 1, 1, 0, 0], [0, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 0, 0, 0, 0]):
+                    car.steering_angle = int(90 - angle)
+                    off_track_count = 0
+                    print("links")
+                elif irm_status in ([0, 0, 1, 1, 0], [0, 0, 0, 1, 0], [0, 0, 0, 1, 1], [0, 0, 0, 0, 1]):
+                    car.steering_angle = int(90 + angle)
+                    off_track_count = 0
+                    print("rechts")
+                elif irm_status == [0, 0, 0, 0, 0]:
+                    off_track_count += 1
+                    if off_track_count > 25:
+                        car.stop()
+                        print("fehlende Fahrbahn")
+                        break
+            else:
+                car.stop()
+                print("Hinderniss entfernen")
+                while car.distance <= 50:
+                    time.sleep(1)
+                car.drive(30, 1)
+                
+
+
+        
 
 
 #Hauptprogramm
@@ -216,6 +282,75 @@ def main(modus, car: SensorCar):
         linienfahrt()
         car.stop()
         print("Ende")
+
+
+
+    elif modus == 6:
+        print(modi[modus])
+        print("Folge der Fahrbahn")
+        while True:
+            car.drive(30, 1)
+            linienfahrt()
+            if car.steering_angle < 50 or car.steering_angle > 50:
+                tmp_angle = (car.steering_angle - 90) / abs(90 - car.steering_angle)
+                tmp_angle = tmp_angle * 45 + 90
+                car.steering_angle = tmp_angle
+
+                off_track_count = 0
+                car.drive(25, -1)
+                while off_track_count < 15:
+                    off_track_count += 1
+                    irm_status = car.irm.read_digital()
+                    if irm_status in ([1, 1, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 0, 1, 1], [0, 0, 0, 1, 0]):
+                        break
+                    time.sleep(.05)
+                car.stop()
+                if off_track_count >= 15:
+                    print("Zeitüberschreitung bei der Fahrbahnsuche")
+                    break
+            else:
+                print("Fahrparcour beendet")
+                break
+                    
+
+                    
+     elif modus == 7:
+        print(modi[modus])
+        print("Folge der Fahrbahn")
+        while True:
+                car.drive(30, 1)
+                linienfahrt_Hindernisserkennung()
+                if car.steering_angle < 50 or car.steering_angle > 50:
+                    tmp_angle = (car.steering_angle - 90) / abs(90 - car.steering_angle)
+                    tmp_angle = tmp_angle * 45 + 90
+                    car.steering_angle = tmp_angle
+
+                    off_track_count = 0
+                    car.drive(25, -1)
+                    while off_track_count < 15:
+                        off_track_count += 1
+                        irm_status = car.irm.read_digital()
+                        if irm_status in ([1, 1, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 0, 1, 1], [0, 0, 0, 1, 0]):
+                            break
+                        time.sleep(.05)
+                    car.stop()
+                    if off_track_count >= 15:
+                        print("Zeitüberschreitung bei der Fahrbahnsuche")
+                        break
+                else:
+                    print("Fahrparcour beendet")
+                    break
+            else:
+                car.stop()
+                print("Hinderniss entfernen")
+                while car.distance <= 50:
+                    time.sleep(1)
+    
+
+            
+
+
+
    
 
     elif modus == 9:
