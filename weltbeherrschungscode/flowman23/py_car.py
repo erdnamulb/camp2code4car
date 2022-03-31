@@ -68,7 +68,7 @@ def follow_line(car: SensorCar, with_distance :bool = False):
             step = b_step
         elif ir_data == [1,1,0,0,0] or ir_data == [0,0,0,1,1]:
             step = c_step
-        elif ir_data == [1,0,0,0,0] or ir_data == [0,0,0,0,1]:
+        elif ir_data in ([1,0,0,0,0],[0,0,0,0,1],[0,0,1,1,1],[1,1,1,0,0]):
             step = d_step
 
         # straightforward
@@ -76,11 +76,11 @@ def follow_line(car: SensorCar, with_distance :bool = False):
             steering_angle = 90
             off_track_count = 0
         # turn right
-        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
+        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0],[1,1,1,0,0]):
             steering_angle = int(90 - step)
             off_track_count = 0
         # turn left
-        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
+        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1],[0,0,1,1,1]):
             steering_angle = int(90 + step)
             off_track_count = 0
         
@@ -95,7 +95,7 @@ def follow_line(car: SensorCar, with_distance :bool = False):
         if ir_data == [0,0,0,0,0]:
             off_track_count += 1
             print(f"off track: {off_track_count}")
-            if off_track_count > 10:
+            if off_track_count > 8:
                 return False # Ende wegen fehlender Linie
         # Lenken
         car.steering_angle = steering_angle
@@ -114,7 +114,7 @@ def back_to_line(car: SensorCar):
         tmp_angle =(90 - car.steering_angle)/abs(car.steering_angle - 90)
         tmp_angle = tmp_angle * 45 + 90
         car.steering_angle = tmp_angle
-        
+    
     # zurück zur Linie
     off_track_count = 0
     car.drive(30,-1)
@@ -124,9 +124,13 @@ def back_to_line(car: SensorCar):
         if ir_data[2] == 1:
             break
         off_track_count += 1
-        #time.sleep(0.01)
+        time.sleep(0.01)
     car.stop()
-    car.steering_angle = 90
+    if car.steering_angle != 90:
+        tmp_angle =(90 - car.steering_angle)/abs(car.steering_angle - 90)
+        tmp_angle = tmp_angle * 30 + 90
+        car.steering_angle = tmp_angle 
+    #car.steering_angle = 90
     return off_track_count
 
 def main(modus, car: SensorCar):
