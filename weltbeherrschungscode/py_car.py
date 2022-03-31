@@ -1,4 +1,5 @@
-import sys, time
+import sys, time, os
+sys.path.append(os.path.dirname(sys.path[0]))
 from auto_code import SensorCar 
 
 def drive_time(car: SensorCar, speed: int, direction: int, steering_angle: int, duration: int):
