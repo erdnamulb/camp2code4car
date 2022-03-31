@@ -119,7 +119,7 @@ class SensorCar(SonicCar):
             ir_references = [100, 100, 100, 100, 100]
             self.speed_fw = 30
             self.speed_bw = 30
-            self.angle_bw = 30
+            self.angle_fw = 30
             self.angle_bw = 45
             self.offtrack_fw = 8
             self.offtrack_bw = 30
