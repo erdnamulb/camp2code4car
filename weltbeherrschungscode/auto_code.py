@@ -175,7 +175,7 @@ class SensorCar(SonicCar):
             
         with open(sys.path[0] + "/config.json", "w") as fout:
             data['ir_references'] = list(self.irm._references)
-            fout.write(json.dumps(data))
+            fout.write(json.dumps(data,indent = 6))
         print(data)
 
     def log(self):

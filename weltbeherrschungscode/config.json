@@ -1,1 +1,19 @@
-{"speed_fw": 40, "speed_bw": 40, "angle_bw": 45, "offtrack_fw": 10, "offtrack_bw": 30, "ir_intervall": 0.001, "turning_offset": 0, "forward_A": 0, "forward_B": 0, "ir_references": [100.0, 100.0, 100.0, 100.0, 100.0]}
+{
+      "speed_fw": 30,
+      "speed_bw": 30,
+      "angle_fw": 30,
+      "angle_bw": 45,
+      "offtrack_fw": 8,
+      "offtrack_bw": 30,
+      "ir_intervall": 0.005,
+      "turning_offset": 0,
+      "forward_A": 0,
+      "forward_B": 0,
+      "ir_references": [
+            110.055,
+            106.07,
+            95.995,
+            115.93,
+            96.535
+      ]
+}
