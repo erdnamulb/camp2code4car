@@ -127,13 +127,15 @@ def main(modus, car: SensorCar):
             b_step = 10
             c_step = 30
             d_step = 45
+            speed_for = 30
+            speed_back = 30
             turning_angle = 40
             off_track_count =0
             max_off_track_count =25
             turning_max = 45
             
             
-            car.drive(30,1)
+            car.drive(speed_for,1)
             lt_status_now = car.irm.read_digital()
             distance = car.distance
             while distance > 12 or distance < 0:
@@ -170,7 +172,7 @@ def main(modus, car: SensorCar):
                         #tmp_angle = -(turning_angle - 90) + 90
                         tmp_angle = (turning_angle-90)/abs(90-turning_angle)
                         tmp_angle *= turning_max
-                        car.drive(30,-1)
+                        car.drive(speed_back,-1)
                         car.steering_angle = tmp_angle
 
                         while True:
@@ -181,7 +183,7 @@ def main(modus, car: SensorCar):
 
                         car.steering_angle = turning_angle
                         time.sleep(0.2) 
-                        car.drive(30,1)
+                        car.drive(speed_for,1)
                         time.sleep(0.2)
 
 
