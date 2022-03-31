@@ -1,1 +1,1 @@
-{"turning_offset": -15, "forward_A": 0, "forward_B": 0, "ir_references": [138.71, 151.49, 147.48499999999999, 133.135, 144.175]}
+{"speed_fw": 30, "speed_bw": 40, "angle_bw": 45, "offtrack_fw": 10, "offtrack_bw": 30, "ir_intervall": 0.005, "turning_offset": -15, "forward_A": 0, "forward_B": 0, "ir_references": [125.045, 146.49, 145.03, 135.855, 153.07]}

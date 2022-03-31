@@ -280,7 +280,7 @@ def main(modus, car: SensorCar):
         
         elif modus == 7:
             print(modi[modus])
-            speed = 50
+            speed = 30
             car.steering_angle = 90
             while True:
                 car.drive(speed,1)
