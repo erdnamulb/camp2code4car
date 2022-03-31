@@ -67,7 +67,7 @@ def follow_line(car: SensorCar, with_distance :bool = False):
             step = b_step
         elif ir_data == [1,1,0,0,0] or ir_data == [0,0,0,1,1]:
             step = c_step
-        elif ir_data == [1,0,0,0,0] or ir_data == [0,0,0,0,1]:
+        elif ir_data in ([1,0,0,0,0],[0,0,0,0,1],[0,0,1,1,1],[1,1,1,0,0]):
             step = d_step
 
         # straightforward
@@ -75,11 +75,11 @@ def follow_line(car: SensorCar, with_distance :bool = False):
             steering_angle = 90
             off_track_count_fw = 0
         # turn right
-        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
+        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0],[1,1,1,0,0]):
             steering_angle = int(90 - step)
             off_track_count_fw = 0
         # turn left
-        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
+        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1],[0,0,1,1,1]):
             steering_angle = int(90 + step)
             off_track_count_fw = 0
         
@@ -123,9 +123,12 @@ def back_to_line(car: SensorCar):
         if ir_data[2] == 1:
             break
         off_track_count_bw += 1
-        time.sleep(car.ir_intervall)
+        time.sleep(car.ir_intervall*2)
     car.stop()
-    car.steering_angle = 90
+    if car.steering_angle != 90:
+        tmp_angle =(90 - car.steering_angle)/abs(car.steering_angle - 90)
+        tmp_angle = tmp_angle * car.angle_fw + 90
+        car.steering_angle = tmp_angle
     return off_track_count_bw
 
 def main(modus, car: SensorCar):
