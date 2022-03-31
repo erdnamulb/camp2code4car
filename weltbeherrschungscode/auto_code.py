@@ -107,21 +107,23 @@ class SensorCar(SonicCar):
             with open(sys.path[0] + "/config.json", "r") as f:
                 data = json.load(f)
                 ir_references = data["ir_references"]
-                self.speed_fw= data["speed_fw"]
-                self.speed_bw= data["speed_bw"]
-                self.angle_bw= data["angle_bw"]
-                self.offtrack_fw= data["offtrack_fw"]
-                self.offtrack_bw= data["offtrack_bw"]
-                self.ir_intervall= data["ir_intervall"]
+                self.speed_fw = data["speed_fw"]
+                self.speed_bw = data["speed_bw"]
+                self.angle_fw = data["angle_fw"]
+                self.angle_bw = data["angle_bw"]
+                self.offtrack_fw = data["offtrack_fw"]
+                self.offtrack_bw = data["offtrack_bw"]
+                self.ir_intervall = data["ir_intervall"]
                 print("IR References: ", ir_references)
         except:
             ir_references = [100, 100, 100, 100, 100]
-            self.speed_fw= 40
-            self.speed_bw= 40
-            self.angle_bw= 45
-            self.offtrack_fw= 10
-            self.offtrack_bw= 30
-            self.ir_intervall= 0.001
+            self.speed_fw = 30
+            self.speed_bw = 30
+            self.angle_bw = 30
+            self.angle_bw = 45
+            self.offtrack_fw = 8
+            self.offtrack_bw = 30
+            self.ir_intervall = 0.005
             print("config.json nicht gefunden")
         
         self.irm = Infrared(ir_references)
