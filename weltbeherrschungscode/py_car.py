@@ -1,8 +1,8 @@
 import sys, time
 from auto_code import SensorCar 
 
-def drive_with_log(car: SensorCar, speed: int, direction: int, steering_angle: int, duration: int):
-    """drive in defined direction
+def drive_time(car: SensorCar, speed: int, direction: int, steering_angle: int, duration: int):
+    """drive in defined direction for defined time
     Args:
             speed (int): drive speed
             direction(int): 1 = forward, -1 = backward
@@ -13,10 +13,9 @@ def drive_with_log(car: SensorCar, speed: int, direction: int, steering_angle: i
     car.drive(speed,direction)
     time_start = time.time()
     while time.time() - time_start < duration:
-        print(f"spped: {car._speed:3}, direction: {car._direction:2}, steering angele: {car.steering_angle:3}, time: {(time.time() - time_start):.2f}")
         time.sleep(.2)
+        print(f"spped: {car._speed:3}, direction: {car._direction:2}, steering angele: {car.steering_angle:3}, time: {(time.time() - time_start):.2f}")
     car.stop()
-
 
 def turn_direction(car: SensorCar):
     """The function alternately returns the two end stops of the steering
@@ -36,8 +35,8 @@ def avoid_crash(car: SensorCar):
     The vehicle then continues straight ahead.
     """
     car.stop()
-    drive_with_log(car, speed=car._speed, direction=-1, steering_angle=90, duration=1)
-    drive_with_log(car, speed=car._speed, direction=-1, steering_angle=turn_direction(car), duration=2)
+    drive_time(car, speed=car._speed, direction=-1, steering_angle=90, duration=1)
+    drive_time(car, speed=car._speed, direction=-1, steering_angle=turn_direction(car), duration=2)
     car.steering_angle = 90
     car.drive(car._speed, 1)
 
@@ -129,7 +128,6 @@ def back_to_line(car: SensorCar):
     car.steering_angle = 90
     return off_track_count
 
-
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
     Args:
@@ -193,16 +191,16 @@ def main(modus, car: SensorCar):
                     turn_angle = 50
 
                 print("vorwärts")
-                drive_with_log(car, speed=40, direction=1, steering_angle=90, duration=1)
+                drive_time(car, speed=40, direction=1, steering_angle=90, duration=1)
                 time.sleep(.5)
                 print("Einschlagen")
-                drive_with_log(car, speed=40, direction=1, steering_angle=turn_angle, duration=8)
+                drive_time(car, speed=40, direction=1, steering_angle=turn_angle, duration=8)
                 time.sleep(1)
                 print("Zurück")
-                drive_with_log(car, speed=40, direction=-1, steering_angle=turn_angle, duration=8)
+                drive_time(car, speed=40, direction=-1, steering_angle=turn_angle, duration=8)
                 time.sleep(.5)
                 print("Rückwärts")
-                drive_with_log(car, speed=40, direction=-1, steering_angle=90, duration=1)
+                drive_time(car, speed=40, direction=-1, steering_angle=90, duration=1)
                 loop_count += 1
 
 

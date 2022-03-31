@@ -100,7 +100,7 @@ class SensorCar(SonicCar):
         # Setup DataFrame and DataBase
         self.df = log.init_dataframe()
         self._db_path = f"{sys.path[0]}/logdata.sqlite"
-        log.makedatabase_singletable(self._db_path)
+        log.makedatabase(self._db_path)
 
         # Load config.json part 2: IR-references
         try:
@@ -179,10 +179,8 @@ class SensorCar(SonicCar):
         ir_sensors = self.read_ir_digital
         log.add_row_df(self.df, distance, ir_sensors , self.speed, self.direction, self.steering_angle)
         return distance, ir_sensors
-
+    
     def write_log_to_db(self):
-        """Function to save log Dataframe to sqlite DB
+        """Function to save log Information
         """
-        conn = log.create_connection(self._db_path)
-        self.df.to_sql('drivedata', conn, if_exists='append', index = False)
-        print("Dataframe succesfully written to sqlite DB")
+        log.write_log_to_db(self._db_path, self.df)
