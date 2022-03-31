@@ -18,9 +18,7 @@ class BaseCar():
                 turning_offset = data["turning_offset"]
                 forward_A = data["forward_A"]
                 forward_B = data["forward_B"]
-                print("Turning Offset: ", turning_offset)
-                print("Forward A: ", forward_A)
-                print("Forward B: ", forward_B)
+                #print(f"Turning Offset: {turning_offset}; Forward A: {forward_A}; Forward B: {forward_B}")
         except:
             print("config.json nicht gefunden")
             turning_offset = 0
@@ -114,7 +112,7 @@ class SensorCar(SonicCar):
                 self.offtrack_fw = data["offtrack_fw"]
                 self.offtrack_bw = data["offtrack_bw"]
                 self.ir_intervall = data["ir_intervall"]
-                print("IR References: ", ir_references)
+                print("Json-File: ", data)
         except:
             ir_references = [100, 100, 100, 100, 100]
             self.speed_fw = 30
