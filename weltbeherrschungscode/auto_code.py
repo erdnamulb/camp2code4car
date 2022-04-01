@@ -9,7 +9,7 @@ class BaseCar():
         self._steering_angle = 90
         self._speed = 0
         self._direction = 0
-        self._bool_turn = True
+        self._bool_turn = True # bool für das setzen der Lenkendanschläge bei Aufgabe 4 (True = links -> 45°, False =  rechts -> 135°)
         
         # Load config.json part 1
         try:
