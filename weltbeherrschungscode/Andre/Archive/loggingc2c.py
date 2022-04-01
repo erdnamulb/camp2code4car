@@ -57,12 +57,12 @@ def add_row_df(df_name, dist, irval, speed, dir, ang):
 
 # Datenbank Verbindung herstellen:
 
-def create_connection(path: str):
+def create_connection(db_file):
     """Erstellt ein Verbindungsobjekt zur SQLite Datenbank db_file.
-        Beispiel: my_conn = create_connection('db_path')
+        Beispiel: my_conn = create_connection('db_file')
 
     Args:
-        path (string): database file
+        db_file (string): database file
 
     Returns:
         _type_: Connection object oder None
@@ -70,8 +70,9 @@ def create_connection(path: str):
     
     conn = None
     try:
-        conn = sqlite3.connect(path)
-    except Exception as e:
+        conn = sqlite3.connect(db_file)
+        print("connection success")
+    except Error as e:
         print(e)
 
     return conn
@@ -79,7 +80,7 @@ def create_connection(path: str):
 
 # Funktionen zum Anlegen der Datenbank:
 
-def makedatabase(path: str):
+def makedatabase_singletable(name: str):
     """Anlegen einer Datenbank mit der Tabelle 'drivedata' (voreingestellt) mit den Spalten:
         timestamp,
         distance,
@@ -93,11 +94,11 @@ def makedatabase(path: str):
         angle
 
     Args:
-        path (str): Name der Datenbank (z.B. 'mydatabase.sql')
+        name (str): Name der Datenbank (z.B. 'mydatabase.sql')
     """    
 
     try:
-        db = sqlite3.connect(path)
+        db = sqlite3.connect(name)
 
         db.execute("""
             CREATE TABLE drivedata (
@@ -116,19 +117,19 @@ def makedatabase(path: str):
         
         db.commit()
         db.close()
-        print("Datenbank {} erstellt.",format(path))
+        print("Datenbank {} erstellt.",format(name))
     except:
         print('Datenbank existiert schon.')
 
 
 # Funktionen für Schreiben und Lesen der Datenbank:
 
-def add_data(path: str, valuedist, valueir, valuespd, valuedir, valueang):
+def add_data(name, valuedist, valueir, valuespd, valuedir, valueang):
     """Hinzufügen zu Tabelle 'drivedata' (fest definiert) von Datensatz mit Zeitstempel (wird automatisch generiert) zum Zeitpunkt des Schreibens.
         Reihenfolge: Datenbankname, Ultraschall, Infrarot (Liste mit 5 Elementen), Geschwindigkeit, Direcition, Lenkwinkel
 
     Args:
-        path (string): Datenbankname
+        name (string): Datenbankname
         valuedist (_type_): Ultraschall Abstandswert (int)
         valueir (_type_): Infrarot Sensorwerte (Liste aus 5 Elementen (int))
         valuespd (_type_): Setzwert Geschwindigkeit (int)
@@ -142,7 +143,7 @@ def add_data(path: str, valuedist, valueir, valuespd, valuedir, valueang):
     ir4 = valueir[3]
     ir5 = valueir[4]
     time = str(dt.datetime.timestamp(dt.datetime.now()))
-    db = create_connection(path)
+    db = create_connection(name)
     db.execute("""
         INSERT INTO drivedata 
             (timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle)
@@ -152,27 +153,17 @@ def add_data(path: str, valuedist, valueir, valuespd, valuedir, valueang):
     db.close()
 
 
-def read_data(path: str):
+def read_data(name):
     """Auslesen der kompletten Tabelle 'drivedata' (vordefiniert) aus Datenbank 'name' mit den Spalten:
         Ultraschall, Infrarot 1 , Infrarot 2 , Infrarot 3 , Infrarot 4 , Infrarot 5, Geschwindigkeit, Direcition, Lenkwinkel
 
     Args:
-        path (string): Datenbankname + Pfrad
+        name (string): Datenbankname
     """ 
-    db = create_connection(path)
+    db = create_connection(name)
     cur = db.cursor()
     cur.execute("SELECT * FROM drivedata")
     rows = cur.fetchall()
     for row in rows:
         print(row)
     db.close()
-
-def write_log_to_db(path: str, df: pd.DataFrame):
-        """Function to save log Dataframe to sqlite DB
-
-        Args:
-        path (string): Datenbankname + Pfrad
-        """
-        conn = create_connection(path)
-        df.to_sql('drivedata', conn, if_exists='append', index = False)
-        print("Dataframe succesfully written to sqlite DB")

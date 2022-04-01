@@ -14,11 +14,13 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 df = pd.DataFrame()
 conn = connect(f'{sys.path[0]}/logdata.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
+print(df)
+#df = df.loc[df['timestamp'] != '0']
 df = df[df['timestamp'] != '0']   # Zeilen mit 0 im Zeitstempel ausfiltern
-# print(df)
+print(df)
 df['time'] = df.apply(
     lambda row: dt.datetime.fromtimestamp(float(row.timestamp)), axis=1)
-#print(df)
+print(df)
 features = df.columns[1:len(df.columns)]
 
 
@@ -109,11 +111,19 @@ card_distance_tot = dbc.Card(
 )
 
 
+
+
+
 app.layout = html.Div(
     children=[
         html.H1(id='H1',
                 children='Sensordaten Cockpit',
                 style={'textAlign': 'center', 'marginTop': 40, 'marginBottom': 40}),
+        html.H4(id='H2',
+                children='Datenübersicht SensorCar',
+                ),
+        html.Div(children='Laberrhabarber',
+                style={'marginTop': 10, 'marginLeft': 40}),
         html.Br(),
         html.Div(
             children=[
@@ -136,7 +146,16 @@ app.layout = html.Div(
             value='distance',
         ),
         html.Br(),
-        dcc.Graph(id='dataplot')
+        dcc.Graph(id='dataplot'),
+        html.Br(),
+        html.Div(
+                [
+                dbc.Button('Prog. 2', id='startbutton-2', color='primary', className='p2-start', value='2'),
+                #dbc.Button('Prog. 3', id='startbutton-3', color='primary', className='p3-start', value='3'),
+                #dbc.Button('Prog. 4', id='startbutton-4', color='primary', className='p4-start', value='4'),
+                html.Span(id='status-output', style={"verticalAlign": "middle"}),
+                ], style={'marginTop': 10, 'marginLeft': 40}
+                ), 
     ]
 )
 
@@ -149,6 +168,21 @@ def graph_update(value_of_input_component):
     title="Gruppe 3 Fahrdaten", 
     labels={'x': 'Zeit', 'y':value_of_input_component})
     return fig
+
+
+@app.callback(
+    Output('status-output', 'children'), 
+    #Output('status-output', 'children'), 
+    #Output('status-output', 'children'), 
+    [Input('startbutton-2', 'value')],
+    #[Input('startbutton-3', 'value')],
+    #[Input('startbutton-4', 'value')]
+    )
+def on_button_click(value):
+    # Testdrive.py aufrufen mit entsprechendem Argument
+    text = 'Fahrprogramm {} wird gestartet.'.format(value)
+    return text
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
