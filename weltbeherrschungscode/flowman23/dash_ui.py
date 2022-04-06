@@ -18,6 +18,8 @@ df = pd.DataFrame()
 conn = connect('logdata.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
 df = df.iloc[1: , : ]
+#df = df.iloc[(df["timestamp"]) > "0"]
+df = df.loc[df['timestamp'] != "0"]
 print(df)
 df['time'] = df.apply(
     lambda row: dt.datetime.fromtimestamp(float(row.timestamp)), axis=1)
