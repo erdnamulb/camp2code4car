@@ -12,7 +12,7 @@ import datetime as dt
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 df = pd.DataFrame()
-conn = connect(f'{sys.path[0]}/logdata.sqlite')
+conn = connect(f'{sys.path[0]}/P5_45speed_5ms_300_q.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
 df = df[df['timestamp'] != '0']   # Zeilen mit 0 im Zeitstempel ausfiltern
 # print(df)

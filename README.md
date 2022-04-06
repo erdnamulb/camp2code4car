@@ -1,4 +1,4 @@
-# camp2code4car
+# camp2code4car -> Download von Code mittels Ordner "weltbeherrschungscode" (ohne Unterordner)
 Camp2Code files 2022 Gruppe 3
 Initial am 2022-03-21 erzeugt
 
