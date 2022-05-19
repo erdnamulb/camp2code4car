@@ -164,7 +164,7 @@ def main(modus, car: SensorCar):
 
         while modus == None:
             modus = input("Wähle  (Abbruch mit '0'): ? ")
-            if modus in ['1', '2', '3', '4', '5', '6', '7', '8', '0']:
+            if modus in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
                 break
             else:
                 modus = None
@@ -323,6 +323,22 @@ def main(modus, car: SensorCar):
             while True:
                 print(f"Digital: {car.read_ir_digital} Analog: {car.read_ir_analog}")
                 time.sleep(.5)
+
+        elif modus == 9:
+            #print(modi[modus])
+            while True:
+                car.steering_angle = 90
+                print(car.steering_angle)
+                time.sleep(3)
+                car.steering_angle = 45
+                print(car.steering_angle)
+                time.sleep(1)
+                car.steering_angle = 90
+                print(car.steering_angle)
+                time.sleep(3)
+                car.steering_angle = 135
+                print(car.steering_angle)
+                time.sleep(1)
 
 
         elif modus == 0:
