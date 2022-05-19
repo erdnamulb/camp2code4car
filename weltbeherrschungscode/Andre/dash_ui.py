@@ -12,26 +12,28 @@ import datetime as dt
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 df = pd.DataFrame()
-conn = connect(f'{sys.path[0]}/logdata.sqlite')
+#conn = connect(f'{sys.path[0]}/logdata.sqlite')
+conn = connect(f'{sys.path[0]}/P5_45speed_5ms_300_q.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
 df = df[df['timestamp'] != '0']   # Zeilen mit 0 im Zeitstempel ausfiltern
 # print(df)
 df['time'] = df.apply(
     lambda row: dt.datetime.fromtimestamp(float(row.timestamp)), axis=1)
 #print(df)
-features = df.columns[1:len(df.columns)]
+features = df.columns[1:len(df.columns)-1]
 
 
 speed_max = df['speed'].max()
 speed_min = df['speed'].min()
-speed_mean = df['speed'].mean()
+speed_mean = round(df['speed'].mean(),2)
 time_start = dt.datetime.fromtimestamp(float(df['timestamp'].min()))
 time_stop = dt.datetime.fromtimestamp(float(df['timestamp'].max()))
 duration = time_stop - time_start
-drivetime_tot = duration.total_seconds()
+drivetime_tot = round(duration.total_seconds(),1)
 drivetime_str = str(drivetime_tot) + " s"
-distance_tot = drivetime_tot * speed_mean * (30/40) # ca. 30cm bei Geschwindigkeit 40 pro s
+distance_tot = round(drivetime_tot * speed_mean * (30/40), 1) # ca. 30cm bei Geschwindigkeit 40 pro s
 distance_str = str(distance_tot) + " cm"
+
 
 card_speed_max = dbc.Card(
     [
@@ -149,6 +151,7 @@ def graph_update(value_of_input_component):
     title="Gruppe 3 Fahrdaten", 
     labels={'x': 'Zeit', 'y':value_of_input_component})
     return fig
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
