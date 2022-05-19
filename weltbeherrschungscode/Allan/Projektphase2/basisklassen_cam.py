@@ -1,4 +1,4 @@
-import cv2
+import cv2 
 import matplotlib.pyplot as plt
 
 class Camera():
@@ -79,4 +79,31 @@ class Camera():
     def release(self):
         """Releases the camera so it can be used by other programs.
         """
-        self.VideoCapture.release()
+        self.VideoCapture.release()    
+
+
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Cannot open camera")
+    exit()
+# Schleife für Video Capturing
+while True:
+    # Abfrage eines Frames
+    ret, frame = cap.read()
+    height, width, _ = frame.shape
+    frame = cv2.resize(frame,(int(width*1/3), int(height*1/3)), interpolation = cv2.INTER_CUBIC)
+    # Wenn ret == TRUE, so war Abfrage erfolgreich
+    if not ret:
+        print("Can't receive frame (stream end?). Exiting ...")
+        break
+    # Bildmanipulation
+    frame_to_display = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # ---------------------------
+    # Display des Frames
+    cv2.imshow("Display window (press q to quit)", frame_to_display)
+    # Ende bei Drücken der Taste q
+    if cv2.waitKey(1) == ord('q'):
+        break
+# Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
+cap.release()
+cv2.destroyAllWindows()
