@@ -3,6 +3,7 @@ import datetime
 import pandas as pd 
 import time 
 import json
+import sys
 
 class BaseCar():
     """Class for a basic car.
@@ -35,7 +36,7 @@ class BaseCar():
     def __init__(self, config="config.json"):
 
         #Einlesen config-File
-        with open(config, "r") as f:
+        with open(sys.path[0] + "/" + config, "r") as f:
             data = json.load(f)
             turning_offset = data["turning_offset"]
             forward_A = data["forward_A"]
