@@ -1,5 +1,6 @@
 import sys
 from basisklassen import *
+from basisklassen_cam import *
 import loggingc2c as log
 
 class BaseCar():
@@ -196,3 +197,62 @@ class SensorCar(SonicCar):
         """Function to save log Information
         """
         log.write_log_to_db(self._db_path, self.df)
+
+class CamCar(SensorCar):
+
+    def __init__(self, skip_frame=2, cam_number=0):
+        super().__init__()
+        self.skip_frame = skip_frame
+        self.VideoCapture = cv2.VideoCapture(cam_number)#, cv2.CAP_V4L)
+        if not self.VideoCapture.isOpened():
+            print("Cannot open camera")
+            self.VideoCapture.release()
+            exit()
+        self.VideoCapture.set(cv2.CAP_PROP_FRAME_WIDTH,800)
+        self.VideoCapture.set(cv2.CAP_PROP_FRAME_HEIGHT,600)
+        self.VideoCapture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self._imgsize = (int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                         int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+
+    def get_frame(self, return_ret_value=False):
+        """Returns current frame recorded by the camera
+
+        Returns:
+            numpy array: returns current frame as numpy array
+        """
+        if self.skip_frame:
+            for i in range(int(self.skip_frame)):
+                ret, frame = self.VideoCapture.read()
+        ret, frame = self.VideoCapture.read()
+        frame = cv2.flip(frame, -1)
+        return frame, ret if return_ret_value else frame
+
+    def testCam(self):
+        """TEXT
+        """
+        # Schleife für Video Capturing
+        while True:
+            # Abfrage eines Frames
+            frame, ret = self.get_frame(True)
+            # Wenn ret == TRUE, so war Abfrage erfolgreich
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+            # Bildmanipulation ----------
+            frame = cv2.flip(frame, -1)
+            #frame_to_display = cv2.cvtColor(frame, cv.COLOR_BGR2RGB)# BGR2GRAY)
+            frame_to_display = frame
+            # ---------------------------
+            # Display des Frames
+            cv2.imshow("Display window (press q to quit)", frame_to_display)
+            # Ende bei Drücken der Taste q
+            if cv2.waitKey(1) == ord('q'):
+                break
+        # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
+        self.VideoCapture.release()
+        cv2.destroyAllWindows()
+    
+    def release(self):
+        """Releases the camera so it can be used by other programs.
+        """
+        self.VideoCapture.release()
