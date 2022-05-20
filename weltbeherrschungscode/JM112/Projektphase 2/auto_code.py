@@ -239,10 +239,15 @@ class CamCar(SensorCar):
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
             # Bildmanipulation ----------
+<<<<<<< HEAD:weltbeherrschungscode/auto_code.py
             #frame_to_display = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
             #lower_blue = np.array([60,40,40])
             #upper_blue = np.array([150,255,255])
             #frame_to_display = cv2.inRange(frame_to_display, lower_blue,upper_blue)
+=======
+            #frame = cv2.flip(frame, -1)
+            #frame_to_display = cv2.cvtColor(frame, cv.COLOR_BGR2RGB)# BGR2GRAY)
+>>>>>>> 6973181d620db205ee946b5b5f9b9694c4223485:weltbeherrschungscode/JM112/Projektphase 2/auto_code.py
             frame_to_display = frame
             # ---------------------------
             # Display des Frames
@@ -258,3 +263,7 @@ class CamCar(SensorCar):
         """Releases the camera so it can be used by other programs.
         """
         self.VideoCapture.release()
+
+C = CamCar()
+C.testCam()
+print("Ende")
