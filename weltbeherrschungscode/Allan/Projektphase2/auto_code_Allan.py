@@ -242,12 +242,17 @@ class CamCar(SensorCar):
                 break
             # Bildmanipulation ----------
             frame_to_display = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            lower_blue = np.array([80, 40, 40])
+            lower_blue = np.array([60, 40, 40])
             upper_blue = np.array([150, 255, 255])
             mask = cv2.inRange(frame_to_display, lower_blue, upper_blue)
-            # ---------------------------
+            edges = cv2.Canny(mask, 200, 400)
+            
+            roi = cv2.selectROI(frame)
+            print(roi)
+            
             # Display des Frames
-            cv2.imshow("Display window (press q to quit)", mask)
+            cv2.imshow("Display window (press q to quit)", edges)
+            
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break

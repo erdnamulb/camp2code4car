@@ -1,16 +1,16 @@
-import sys
 import os.path
+import sys
 import json
 import uuid
 import dash
 from dash import html, dcc
 from dash.dependencies import Output, Input, State
 from dash import callback_context
+from dash_extensions import Keyboard
 from flask import Flask, Response, request
 from basisklassen_cam import Camera
 sys.path.append(os.path.dirname(sys.path[0]))
-from auto_code import BaseCar
-
+from auto_code_Allan import BaseCar
 
 car = BaseCar()
 take_image = False
@@ -84,6 +84,12 @@ def video_feed():
 app.layout = html.Div(children=[
     html.H1("Remotesteuerung des Auto mit WSAD"),
     html.H2("Einstellungen"),
+    html.Div(
+        [Keyboard(id="keyboard_down"), html.Div(id="output_down")],
+    ),
+    html.Div(
+        [Keyboard(id="keyboard_up"), html.Div(id="output_up")]
+    ),
     html.Div([
         html.Button('Speed = 20', id='btn-nclicks-1', n_clicks=0, style={
                     'font-size': '12px', 'width': '140px', 'display': 'inline-block', 'margin-bottom': '10px', 'margin-right': '5px', 'height': '37px', 'verticalAlign': 'top'}),
