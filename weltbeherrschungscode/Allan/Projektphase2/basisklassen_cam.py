@@ -1,5 +1,7 @@
+from unicodedata import name
 import cv2 
 import matplotlib.pyplot as plt
+import sys
 
 class Camera():
     """A class for the camera
@@ -25,6 +27,8 @@ class Camera():
 
     def __init__(self, skip_frame=2, cam_number=0):
         self.skip_frame = skip_frame
+        #self.VideoCapture.set(cv2.CAP_PROB_FRAME_WIDTH, 2592)
+        #self.VideoCapture.set(cv2.CAP_PROB_FRAME_HEIGHT, 1944)
         self.VideoCapture = cv2.VideoCapture(cam_number, cv2.CAP_V4L) #,
         self.VideoCapture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self._imgsize = (int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)),
@@ -81,7 +85,24 @@ class Camera():
         """
         self.VideoCapture.release()    
 
+cam = Camera()
+path = sys.path[0]
+cam.save_frame(path, name= "absc")
 
+
+
+if __name__=="__main__":
+    cam = Camera()
+    img = cam.get_frame()
+    img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+while True: 
+    cv2.imshow('image', img2)
+    if cv2.waitKey(1) == ord('q'):
+        break 
+    cam.release
+    plt.imshow(img2)
+
+"""
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("Cannot open camera")
@@ -107,3 +128,4 @@ while True:
 # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
 cap.release()
 cv2.destroyAllWindows()
+"""

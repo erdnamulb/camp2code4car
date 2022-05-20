@@ -1,6 +1,8 @@
 import sys
 from basisklassen import *
 import loggingc2c as log
+import cv2 
+import matplotlib.pyplot as plt
 
 
 class BaseCar():
@@ -197,3 +199,30 @@ class SensorCar(SonicCar):
         """Function to save log Information
         """
         log.write_log_to_db(self._db_path, self.df)
+        
+class CamCar(SensorCar):
+    
+    def __init__(self, skip_frame=2, cam_number=0):
+        self.skip_frame = skip_frame
+        self.VideoCapture = cv2.VideoCapture(cam_number, cv2.CAP_V4L) #,
+        self.VideoCapture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self._imgsize = (int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                         int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        
+    def get_frame(self):
+        """Returns current frame recorded by the camera
+
+        Returns:
+            numpy array: returns current frame as numpy array
+        """
+        if self.skip_frame:
+            for i in range(int(self.skip_frame)):
+                _, frame = self.VideoCapture.read()
+        _, frame = self.VideoCapture.read()
+        frame = cv2.flip(frame, -1)
+        return frame
+    
+    def release(self):
+        """Releases the camera so it can be used by other programs.
+        """
+        self.VideoCapture.release()

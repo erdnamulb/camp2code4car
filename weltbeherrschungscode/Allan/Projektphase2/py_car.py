@@ -1,6 +1,11 @@
 import sys, time, os
+
+from weltbeherrschungscode.Allan.Projektphase2.basisklassen import Camera
 sys.path.append(os.path.dirname(sys.path[0]))
-from auto_code import SensorCar 
+from auto_code import CamCar, SensorCar, BaseCar
+from auto_code import Camera
+import cv2 
+import matplotlib.pyplot as plt
 
 def drive_time(car: SensorCar, speed: int, direction: int, steering_angle: int, duration: int):
     """drive in defined direction for defined time
@@ -132,6 +137,19 @@ def back_to_line(car: SensorCar):
         car.steering_angle = tmp_angle
     return off_track_count_bw
 
+def KeepLineByCam(cam: CamCar):
+    img = cam.get_frame()
+    img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    cv2.imshow('image', img2)
+    if cv2.waitKey(1) == ord('q'):
+        break
+    cam.release()
+    
+    
+    
+    
+    
+
 def main(modus, car: SensorCar):
     """Main Function for Executing the tasks
     Args:
@@ -147,6 +165,7 @@ def main(modus, car: SensorCar):
         6: 'Fahrparcours 6 - Erweiterte Linienverfolgung',
         7: 'Fahrparcours 7 - 6. + Hinderniserkennung',
         8: 'IR - Sensoren Kalibrieren',
+        9: 'Kamera testen',
         0: 'Ende'
     }
 
@@ -288,7 +307,9 @@ def main(modus, car: SensorCar):
         elif modus == 8: #'IR - Sensoren Kalibrieren'
             print(modi[modus])
             car.calibrate_ir()
-            
+        
+        elif modus == 9: #'Kamera testen'
+            car.cam()
 
         elif modus == 0: #Ende
             quit()
@@ -305,6 +326,8 @@ if __name__ == '__main__':
         modus = sys.argv[1]
     except:
         modus = None
+    
+    car.get
 
     main(modus, car)
     car.stop()
