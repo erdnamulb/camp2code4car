@@ -1,7 +1,7 @@
 import sys
 from basisklassen import *
-from basisklassen_cam import *
 import loggingc2c as log
+import cv2
 
 class BaseCar():
     """Base Class to define the car movement
@@ -239,8 +239,10 @@ class CamCar(SensorCar):
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
             # Bildmanipulation ----------
-            frame = cv2.flip(frame, -1)
-            #frame_to_display = cv2.cvtColor(frame, cv.COLOR_BGR2RGB)# BGR2GRAY)
+            #frame_to_display = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+            #lower_blue = np.array([60,40,40])
+            #upper_blue = np.array([150,255,255])
+            #frame_to_display = cv2.inRange(frame_to_display, lower_blue,upper_blue)
             frame_to_display = frame
             # ---------------------------
             # Display des Frames
