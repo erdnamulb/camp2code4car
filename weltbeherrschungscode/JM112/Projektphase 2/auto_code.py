@@ -239,7 +239,7 @@ class CamCar(SensorCar):
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
             # Bildmanipulation ----------
-            frame = cv2.flip(frame, -1)
+            #frame = cv2.flip(frame, -1)
             #frame_to_display = cv2.cvtColor(frame, cv.COLOR_BGR2RGB)# BGR2GRAY)
             frame_to_display = frame
             # ---------------------------
@@ -256,3 +256,7 @@ class CamCar(SensorCar):
         """Releases the camera so it can be used by other programs.
         """
         self.VideoCapture.release()
+
+C = CamCar()
+C.testCam()
+print("Ende")
