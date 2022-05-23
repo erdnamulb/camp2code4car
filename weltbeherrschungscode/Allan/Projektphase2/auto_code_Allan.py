@@ -1,12 +1,10 @@
-import sys, os
-from unittest import TestCase
+import sys
 
-from matplotlib import image
+from matplotlib.ft2font import LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH
 from basisklassen import *
 import loggingc2c as log
 import cv2
-
-path = sys.path.append(os.path.dirname(sys.path[0]))
+import logging
 
 class BaseCar():
     """Base Class to define the car movement
@@ -65,7 +63,7 @@ class BaseCar():
         """
         self._direction = 0
         self.bw.stop()
-    '''
+
     def drive(self, speed: int, direction: int):
         """Function to set speed and motion direction 
         """
@@ -82,39 +80,16 @@ class BaseCar():
 
         self._speed = speed
         self.bw.speed = speed
-    '''      
-    '''
-    def drive(self, speed: int):
-        """ Main entry point of the car, and put it in drive mode
-        Keyword arguments:
-        speed -- speed of back wheel, range is 0 (stop) - 100 (fastest)
-        """
-
-        log.info('Starting to drive at speed %s...' % speed)
-        self._speed = speed
-        i = 0
-        while self.camera.isOpened():
-            _, image_lane = self.camera.read()
-            image_objs = image_lane.copy()
-            i += 1
-            self.video_orig.write(image_lane)
-            
-            image_objs = self.process_objects_on_road(image_objs)
-            self.video_objs.write(image_objs)q
-            show_image('Detected Objects', image_objs)
         
-            image_lane = self.follow_lane(image_lane)
-            self.video_lane.write(image_lane)
-            show_image('Lane Lines', image_lane)
-            
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.cleanup()
-                break
-            
+
+    def process_objects_on_road(self, image):
+        image = self.traffic_sign_processor.process_objects_on_road(image)
+        return image
+
     def follow_lane(self, image):
         image = self.lane_follower.follow_lane(image)
         return image
-    '''
+
 
 class SonicCar(BaseCar):
 
@@ -337,7 +312,7 @@ class CamCar(SensorCar):
         if len(right_fit) > 0:
             lane_lines.append(self.make_points(frame, right_fit_average))
 
-        print('lane lines: %s' % lane_lines)  # [[[316, 720, 484, 432]], [[1009, 720, 718, 432]]]
+        #print('lane lines: %s' % lane_lines)  # [[[316, 720, 484, 432]], [[1009, 720, 718, 432]]]
 
         return lane_lines
     
@@ -361,6 +336,62 @@ class CamCar(SensorCar):
         line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
         return line_image
 
+
+    def compute_steering_angle(self, frame, lane_lines):
+        """ Find the steering angle based on lane line coordinate
+            We assume that camera is calibrated to point to dead center
+        """
+        if len(lane_lines) == 0:
+            print('No lane lines detected, do nothing')
+            return -90
+
+        height, width, _ = frame.shape
+        if len(lane_lines) == 1:
+            print('Only detected one lane line, just follow it. %s' % lane_lines[0])
+            x1, _, x2, _ = lane_lines[0][0]
+            x_offset = x2 - x1
+        else:
+            _, _, left_x2, _ = lane_lines[0][0]
+            _, _, right_x2, _ = lane_lines[1][0]
+            camera_mid_offset_percent = 0.02 # 0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right
+            mid = int(width / 2 * (1 + camera_mid_offset_percent))
+            x_offset = (left_x2 + right_x2) / 2 - mid
+
+        # find the steering angle, which is angle between navigation direction to end of center line
+        y_offset = int(height / 2)
+
+        angle_to_mid_radian = math.atan(x_offset / y_offset)  # angle (in radian) to center vertical line
+        angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
+        steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel
+
+        #print('new steering angle: %s' % steering_angle)
+        return steering_angle
+    
+    def stabilize_steering_angle(self, steering_angle, lane_lines, max_angle_deviation_two_lines=5, max_angle_deviation_one_lane=1):
+    
+        """
+        Using last steering angle to stabilize the steering angle
+        This can be improved to use last N angles, etc
+        if new angle is too different from current angle, only turn by max_angle_deviation degrees
+        """
+        if lane_lines == 2 :
+            # if both lane lines detected, then we can deviate more
+            max_angle_deviation = max_angle_deviation_two_lines
+        else :
+            # if only one lane detected, don't deviate too much
+            max_angle_deviation = max_angle_deviation_one_lane
+        
+        angle_deviation = self.compute_steering_angle() - steering_angle
+        if abs(angle_deviation) > max_angle_deviation:
+            stabilized_steering_angle = int(steering_angle
+                                            + max_angle_deviation * angle_deviation / abs(angle_deviation))
+        else:
+            stabilized_steering_angle = self.compute_steering_angle()
+        
+        print('new steering angle: %s' % stabilized_steering_angle)
+        
+        return stabilized_steering_angle
+        
     def testCam(self):
         """TEXT
         """
@@ -390,12 +421,12 @@ class CamCar(SensorCar):
             
             lane_lines = self.average_slope_intercept(frame, line_segments)
             lane_lines_image = self.display_lines(frame, lane_lines)
-            
+            new_angle = self.stabilize_steering_angle(stabilized_steering_angle, lane_lines)
+            self.steering_angle = new_angle
             
             # ---------------------------
             # Display des Frames
             cv2.imshow("Display window (press q to quit)", lane_lines_image)
-
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break
@@ -403,48 +434,13 @@ class CamCar(SensorCar):
         self.VideoCapture.release()
         cv2.destroyAllWindows()
     
-    
     def release(self):
         """Releases the camera so it can be used by other programs.
         """
         self.VideoCapture.release()
-     
-    def compute_steering_angle(frame, lane_lines):
-        """ Find the steering angle based on lane line coordinate
-        We assume that camera is calibrated to point to dead center
-        """
-        if len(lane_lines) == 0:
-            log.info('No lane lines detected, do nothing')
-            return -90
-
-        height, width, _ = frame.shape
-        if len(lane_lines) == 1:
-            log.debug('Only detected one lane line, just follow it. %s' % lane_lines[0])
-            x1, _, x2, _ = lane_lines[0][0]
-            x_offset = x2 - x1
-        else:
-            _, _, left_x2, _ = lane_lines[0][0]
-            _, _, right_x2, _ = lane_lines[1][0]
-            camera_mid_offset_percent = 0.02 # 0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right
-            mid = int(width / 2 * (1 + camera_mid_offset_percent))
-            x_offset = (left_x2 + right_x2) / 2 - mid
-
-        # find the steering angle, which is angle between navigation direction to end of center line
-        y_offset = int(height / 2)
-
-        angle_to_mid_radian = math.atan(x_offset / y_offset)  # angle (in radian) to center vertical line
-        angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
-        steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel
-
-        log.debug('new steering angle: %s' % steering_angle)
-        return steering_angle
-
 
 if __name__ == '__main__':
     # car anlegen
     car = CamCar()
     car.testCam()
-    car.compute_steering_angle()
     car.release()
-    car.compute_steering_angle()
-    
