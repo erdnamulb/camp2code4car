@@ -10,11 +10,12 @@ import loggingc2c as log
 
 car = fa.CamCar()
 
+#car.drive(30, 1)
 car.testCam()
 car.release()
 
 
-#time.sleep(1)
-#car.steering_angle = 90     # Räder gerade stellen
-#car.stop()                  # Auto anhalten
-#car.usm.stop()              # Ulraschall-Sensor ausschalten  
+#time.sleep(20)
+car.steering_angle = 90     # Räder gerade stellen
+car.stop()                  # Auto anhalten
+car.usm.stop()              # Ulraschall-Sensor ausschalten  
