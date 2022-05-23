@@ -7,6 +7,7 @@ import random
 
 # hier kommen die drei Car Klassen her
 from auto_code import SensorCar
+from auto_code import CamCar
 
 def follow_line(car: SensorCar, runs: int = 200, sleep: float = 0.01):
     car.steering_angle = 90
@@ -260,6 +261,7 @@ if __name__ == '__main__':
     
     # Erstellen des Fahrzeuges
     car = SensorCar()
+    car2 = CamCar()
     
     # Ggf. den Timeout des Ultraschallsensors anpassen:
     #car.usm.timeout = 0.06
