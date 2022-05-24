@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import math
 from auto_code import CamCar
 
 def detect_color_in_frame(car: CamCar, frame):
@@ -47,6 +46,8 @@ def detect_line_segments(car: CamCar, frame):
         return line_segments
 
 def draw_line_segments(line_segments, frame):
+    if line_segments is None: # go on, if there is no line
+        return frame
     frame2 = frame.copy()
     for line in line_segments:
         x1,y1,x2,y2 = line[0]
@@ -77,7 +78,7 @@ def generate_lane_lines(frame, line_segments):
     for line_segment in line_segments:
         for x1, y1, x2, y2 in line_segment:
             if x1 == x2:
-                print('skipping vertical line segment (slope=inf): %s' % line_segment)
+                #print('skipping vertical line segment (slope=inf): %s' % line_segment)
                 continue
             fit =  np.polyfit((x1, x2), (y1, y2), 1)
             #y = mx + n

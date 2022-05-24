@@ -271,8 +271,8 @@ class CamCar(SensorCar):
             We assume that camera is calibrated to point to dead center
         """
         if len(lane_lines) == 0:
-            print('No lane lines detected, do nothing')
-            return -90
+            #print('No lane lines detected, do nothing')
+            return car.steering_angle
 
         height, width, _ = frame.shape
         if len(lane_lines) == 1:
@@ -299,12 +299,13 @@ class CamCar(SensorCar):
         #limt steering angle
         angle_delta = calc_steering_angle - self.steering_angle
         if abs(angle_delta) > max_delta:
-            steering_angle = int(calc_steering_angle + 
-                                max_delta * angle_delta / abs(angle_delta))
+            set_delta = max_delta * angle_delta / abs(angle_delta)
+            steering_angle = int(self.steering_angle + set_delta)
         else:
+            set_delta = 0
             steering_angle = calc_steering_angle
 
-        print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}")
+        print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}, angle_delta {angle_delta}, set_delta {set_delta}")
         return steering_angle
     
     def testCam(self):
@@ -398,7 +399,7 @@ class CamCar(SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = CamCar()
-    car.drive(25,1)
+    #car.drive(25,1)
     car.testCam()
     car.stop()
     #car.test_cuted_frame()
