@@ -259,14 +259,55 @@ class CamCar(SensorCar):
         #Fahrbahnbegrenzung erzeugen
         lane_lines = generate_lane_lines(frame, line_segments)
         #Lenkwinkel berechnen
-        angle = compute_steering_angle(frame, lane_lines)
+        angle = self.compute_steering_angle(frame, lane_lines)
 
         return angle, frame, lane_lines
     
     def lane_lines_on_frame(self, frame, lane_lines, line_color=(0, 255, 0), line_width=2):
         return add_lane_lines_to_frame(frame, lane_lines, line_color, line_width)
         
-   
+    def compute_steering_angle(self, frame, lane_lines):
+        """ Find the steering angle based on lane line coordinate
+            We assume that camera is calibrated to point to dead center
+        """
+        if len(lane_lines) == 0:
+            #print('No lane lines detected, do nothing')
+            return car.steering_angle
+
+        height, width, _ = frame.shape
+        if len(lane_lines) == 1:
+            max_delta = self.max_angle_change_1
+            print('Only detected one lane line, just follow it. %s' % lane_lines[0])
+            x1, _, x2, _ = lane_lines[0][0]
+            x_offset = x2 - x1
+        else:
+            max_delta = self.max_angle_change_2
+            _, _, left_x2, _ = lane_lines[0][0]
+            _, _, right_x2, _ = lane_lines[1][0]
+            #camera_mid_offset_percent = 0.02 # 0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right
+            #mid = int(width / 2 * (1 + camera_mid_offset_percent))
+            mid = int(width / 2)
+            x_offset = (left_x2 + right_x2) / 2 - mid
+
+        # find the steering angle, which is angle between navigation direction to end of center line
+        y_offset = int(height / 2)
+
+        angle_to_mid_radian = math.atan(x_offset / y_offset)  # angle (in radian) to center vertical line
+        angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
+        calc_steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel
+
+        #limt steering angle
+        angle_delta = calc_steering_angle - self.steering_angle
+        if abs(angle_delta) > max_delta:
+            set_delta = max_delta * angle_delta / abs(angle_delta)
+            steering_angle = int(self.steering_angle + set_delta)
+        else:
+            set_delta = 0
+            steering_angle = calc_steering_angle
+
+        print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}, angle_delta {angle_delta}, set_delta {set_delta}")
+        return steering_angle
+    
     def testCam(self):
         """TEXT
         """
@@ -294,22 +335,32 @@ class CamCar(SensorCar):
             #Liniensegmente mit HoughLinesP finden
             line_segments = detect_line_segments(self, frame_cuted_regions)
             # Display Frame with marks
-            """frame_with_marks = draw_line_segments(line_segments, frame)
-            cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
+            frame_with_marks = draw_line_segments(line_segments, frame)
+            #cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
             
             #Fahrbahnbegrenzung erzeugen
             lane_lines = generate_lane_lines(frame, line_segments)
 
             #Lenkwinkel berechnen
-            angle = compute_steering_angle(frame, lane_lines)
+            angle = self.compute_steering_angle(frame, lane_lines)
             self.steering_angle = angle
 
             #Fahrbahnbegrenzung einzeichnen
-            lane_lines_image = add_lane_lines_to_frame(frame, lane_lines)
+            frame_lane_lines = add_lane_lines_to_frame(frame, lane_lines)
             
+            # Frames zumsammen bauen
+            frame_1 = cv2.cvtColor(frame_in_color_range, cv2.COLOR_GRAY2RGB)
+            frame_2 = cv2.cvtColor(frame_cuted_regions, cv2.COLOR_GRAY2RGB)
+            frame_left = np.hstack((frame_1,frame_2))
+            frame_right = np.hstack((frame_with_marks, frame_lane_lines))
+            frame_total = np.vstack((frame_left, frame_right))
+
+            height, width, _ = frame_total.shape
+            frame_total = cv2.resize(frame_total,(int(width*3/4), int(height*3/4)), interpolation = cv2.INTER_CUBIC)
+
             # ---------------------------
             # Display des Frames
-            cv2.imshow("Display window (press q to quit)", lane_lines_image)
+            cv2.imshow("Display window (press q to quit)", frame_total)
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break
@@ -348,7 +399,8 @@ class CamCar(SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = CamCar()
-    #car.test_cuted_frame()
+    car.drive(30,1)
     car.testCam()
+    car.stop()
     #car.test_cuted_frame()
     car.release_cam()
