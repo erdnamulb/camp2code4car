@@ -1,34 +1,48 @@
 import numpy as np
 import cv2
 import math
+from auto_code import CamCar
 
-def detect_color_in_frame(frame):
+def detect_color_in_frame(car: CamCar, frame):
     frame_in_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([60,40,40]) #([60,100,75])
-    upper_blue = np.array([120,255,255])
+    lower_blue = np.array(car.hsv_low)  #([60,40,40]) #([60,100,75])
+    upper_blue = np.array(car.hsv_high)   #([120,255,255])
     frame_in_color_range = cv2.inRange(frame_in_hsv, lower_blue,upper_blue)
     return frame_in_color_range
 
-def cutout_region_of_interest(frame):
+def cutout_region_of_interest(car: CamCar, frame):
         height, width = frame.shape
         mask = np.zeros_like(frame)
 
-        # only focus bottom half of the screen
+        # define frame for cutout
+        w1, h1 = car.point_1
+        w2, h2 = car.point_2
+        w3, h3 = car.point_3
+        w4, h4 = car.point_4
+
         polygon = np.array([[
+            (w1*width/100, h1*height/100),
+            (w2*width/100, h2*height/100),
+            (w3*width/100, h3*height/100),
+            (w4*width/100, h4*height/100),
+        ]], np.int32)
+
+        """polygon = np.array([[
             (0, 4/5 * height),
             (1/4 * width, 1/3 * height),
             (3/4 * width, 1/3 * height),
             (width, 4/5 * height),
         ]], np.int32)
+        """
 
         cv2.fillPoly(mask, polygon, 255)
         cuted_frame = cv2.bitwise_and(frame, mask)
         return cuted_frame
 
-def detect_line_segments(frame):
+def detect_line_segments(car: CamCar, frame):
         rho = 1  # distance precision in pixel, i.e. 1 pixel
         angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
-        min_threshold = 10  # minimal of votes
+        min_threshold = car.hough_min_threshold  # minimal of votes (tested between 10-100)
         line_segments = cv2.HoughLinesP(frame, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4)
         return line_segments
 

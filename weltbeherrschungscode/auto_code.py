@@ -114,6 +114,17 @@ class SensorCar(SonicCar):
                 self.offtrack_fw = data["offtrack_fw"]
                 self.offtrack_bw = data["offtrack_bw"]
                 self.ir_intervall = data["ir_intervall"]
+                self.frame_width = data["frame_width"] # Bildbreite
+                self.frame_height = data["frame_height"] # Bildhöhe
+                self.hsv_low = data["hsv_low"]
+                self.hsv_high = data["hsv_high"]
+                self.point_1 = data["point_1"]
+                self.point_2 = data["point_2"]
+                self.point_3 = data["point_3"]
+                self.point_4 = data["point_4"]
+                self.hough_min_threshold = data["hough_min_threshold"]
+                self.max_angle_change_1 = data["max_angle_change_1"]
+                self.max_angle_change_2 = data["max_angle_change_2"]
                 print("Json-File: ", data)
         except:
             ir_references = [100, 100, 100, 100, 100]
@@ -209,8 +220,8 @@ class CamCar(SensorCar):
             print("Cannot open camera")
             self.VideoCapture.release()
             exit()
-        self.VideoCapture.set(cv2.CAP_PROP_FRAME_WIDTH,800)
-        self.VideoCapture.set(cv2.CAP_PROP_FRAME_HEIGHT,600)
+        self.VideoCapture.set(cv2.CAP_PROP_FRAME_WIDTH,self.frame_width)
+        self.VideoCapture.set(cv2.CAP_PROP_FRAME_HEIGHT,self.frame_height)
         self.VideoCapture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self._imgsize = (int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)),
                          int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
@@ -238,13 +249,13 @@ class CamCar(SensorCar):
 
         # Bildauswertung ----------
         #Frame in HSV wandeln und auf Blau filtern 
-        frame_in_color_range = detect_color_in_frame(frame)
+        frame_in_color_range = detect_color_in_frame(self, frame)
         #Kanten im Frame finden 
         frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
         #Bild beschneiden auf intersssanten Bildausschnitt
         frame_cuted_regions = cutout_region_of_interest(frame_canny_edges)
         #Liniensegmente mit HoughLinesP finden
-        line_segments = detect_line_segments(frame_cuted_regions)
+        line_segments = detect_line_segments(self, frame_cuted_regions)
         #Fahrbahnbegrenzung erzeugen
         lane_lines = generate_lane_lines(frame, line_segments)
         #Lenkwinkel berechnen
@@ -269,18 +280,19 @@ class CamCar(SensorCar):
                 break
             # Bildmanipulation ----------
             #frame_blur=cv2.blur(frame,(5,5))
-            
+             
             #Frame in HSV wandeln und auf Blau filtern 
-            frame_in_color_range = detect_color_in_frame(frame)
+            frame_in_color_range = detect_color_in_frame(self, frame)
 
             #Kanten im Frame finden 
             frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
             
             #Bild beschneiden auf intersssanten Bildausschnitt
-            frame_cuted_regions = cutout_region_of_interest(frame_canny_edges)
+            frame_cuted_regions = cutout_region_of_interest(self, frame_canny_edges)
+            #cv2.imshow("Display window (press q to quit)", frame_cuted_regions)
 
             #Liniensegmente mit HoughLinesP finden
-            line_segments = detect_line_segments(frame_cuted_regions)
+            line_segments = detect_line_segments(self, frame_cuted_regions)
             # Display Frame with marks
             """frame_with_marks = draw_line_segments(line_segments, frame)
             cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
@@ -304,6 +316,30 @@ class CamCar(SensorCar):
         # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
         cv2.destroyAllWindows()
     
+    def test_cuted_frame(self):
+        # Schleife für Video Capturing
+        while True:
+            # Abfrage eines Frames
+            frame, ret = self.get_frame(True)
+            # Wenn ret == TRUE, so war Abfrage erfolgreich
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+            # Bildmanipulation ----------
+            
+            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame_cut = cutout_region_of_interest(self,frame_gray)
+            cv2.imshow("Display window (press q to quit)", frame_cut)
+
+            # ---------------------------
+            # Display des Frames
+            #cv2.imshow("Display window (press q to quit)", lane_lines_image)
+            # Ende bei Drücken der Taste q
+            if cv2.waitKey(1) == ord('q'):
+                break
+        # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
+        cv2.destroyAllWindows()
+
     def release_cam(self):
         """Releases the camera so it can be used by other programs.
         """
@@ -313,4 +349,5 @@ if __name__ == '__main__':
     # car anlegen
     car = CamCar()
     car.testCam()
-    car.release()
+    #car.test_cuted_frame()
+    car.release_cam()
