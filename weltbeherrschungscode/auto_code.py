@@ -294,8 +294,8 @@ class CamCar(SensorCar):
             #Liniensegmente mit HoughLinesP finden
             line_segments = detect_line_segments(self, frame_cuted_regions)
             # Display Frame with marks
-            """frame_with_marks = draw_line_segments(line_segments, frame)
-            cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
+            frame_with_marks = draw_line_segments(line_segments, frame)
+            #cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
             
             #Fahrbahnbegrenzung erzeugen
             lane_lines = generate_lane_lines(frame, line_segments)
@@ -305,11 +305,21 @@ class CamCar(SensorCar):
             self.steering_angle = angle
 
             #Fahrbahnbegrenzung einzeichnen
-            lane_lines_image = add_lane_lines_to_frame(frame, lane_lines)
+            frame_lane_lines = add_lane_lines_to_frame(frame, lane_lines)
             
+            # Frames zumsammen bauen
+            frame_1 = cv2.cvtColor(frame_in_color_range, cv2.COLOR_GRAY2RGB)
+            frame_2 = cv2.cvtColor(frame_cuted_regions, cv2.COLOR_GRAY2RGB)
+            frame_left = np.hstack((frame_1,frame_2))
+            frame_right = np.hstack((frame_with_marks, frame_lane_lines))
+            frame_total = np.vstack((frame_left, frame_right))
+
+            height, width, _ = frame_total.shape
+            frame_total = cv2.resize(frame_total,(int(width*2/3), int(height*2/3)), interpolation = cv2.INTER_CUBIC)
+
             # ---------------------------
             # Display des Frames
-            cv2.imshow("Display window (press q to quit)", lane_lines_image)
+            cv2.imshow("Display window (press q to quit)", frame_total)
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break

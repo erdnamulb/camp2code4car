@@ -47,10 +47,11 @@ def detect_line_segments(car: CamCar, frame):
         return line_segments
 
 def draw_line_segments(line_segments, frame):
+    frame2 = frame.copy()
     for line in line_segments:
         x1,y1,x2,y2 = line[0]
-        cv2.line(frame,(x1,y1),(x2,y2),(0,0,255),4)
-    return frame
+        cv2.line(frame2,(x1,y1),(x2,y2),(0,0,255),4)
+    return frame2
 
 def generate_lane_lines(frame, line_segments):
     #out of all line segments
