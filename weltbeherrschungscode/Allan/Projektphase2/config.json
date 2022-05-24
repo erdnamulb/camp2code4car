@@ -15,5 +15,16 @@
             287.995,
             292.03999999999996,
             288.115
-      ]
+      ],
+      "frame_width" : 800,
+      "frame_height" : 600,
+      "hsv_low": [60,40,40],
+      "hsv_high": [120,255,255],
+      "point_1": [0, 80], 
+      "point_2": [25, 33],
+      "point_3": [75, 33],
+      "point_4": [100, 80],
+      "hough_min_threshold": 50,
+      "max_angle_change_1": 2,
+      "max_angle_change_2": 5            
 }
