@@ -101,67 +101,7 @@ def follow_line(car: CamCar, with_distance :bool = False):
         # Lenken
         car.steering_angle = steering_angle
         time.sleep(car.ir_intervall)
-        
-def follow_line_cam(car: CamCar, with_distance :bool = False):
-    """Function to follow lines using the Camera
-    Args:
-            with_distance (bool): activates or deactivates distance monitoring
-    Returns:
-            [bool]: returns reason for aborting. 
-                True  = Stop due to obstacle (ultrasonic sensors)
-                False = Stop due to lost line (infrared sensors)
-    """
-    steering_angle = car.steering_angle
-    a_step = 5
-    b_step = 25
-    c_step = 35
-    d_step = 45 
-    off_track_count_fw = 0
-    while True:
-        # Sensoren auswerten
-        distance, ir_data = car.log_and_read_values
-        # Angle calculate
-        if	ir_data == [0,0,1,0,0]:
-            step = 0	
-        elif ir_data == [0,1,1,0,0] or ir_data == [0,0,1,1,0]:
-            step = a_step
-        elif ir_data == [0,1,0,0,0] or ir_data == [0,0,0,1,0]:
-            step = b_step
-        elif ir_data == [1,1,0,0,0] or ir_data == [0,0,0,1,1]:
-            step = c_step
-        elif ir_data in ([1,0,0,0,0],[0,0,0,0,1],[0,0,1,1,1],[1,1,1,0,0]):
-            step = d_step
 
-        # straightforward
-        if	ir_data == [0,0,1,0,0]:
-            steering_angle = 90
-            off_track_count_fw = 0
-        # turn right
-        elif ir_data in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0],[1,1,1,0,0]):
-            steering_angle = int(90 - step)
-            off_track_count_fw = 0
-        # turn left
-        elif ir_data in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1],[0,0,1,1,1]):
-            steering_angle = int(90 + step)
-            off_track_count_fw = 0
-        
-        print(f"{ir_data} --> Lenkposition: {steering_angle:3} | Abstand: {distance}")
-
-        # Abstandsüberwachung
-        if with_distance:
-            if distance < 12 and distance > 0:
-                return True # Ende mit Abstandsproblem
-
-        # Prüfen, ob Linie noch da ist
-        if ir_data == [0,0,0,0,0]:
-            off_track_count_fw += 1
-            print(f"off track: {off_track_count_fw}")
-            if off_track_count_fw > car.offtrack_fw:
-                return False # Ende wegen fehlender Linie
-        # Lenken
-        car.steering_angle = steering_angle
-        time.sleep(car.ir_intervall)       
-        
 
 def back_to_line(car: CamCar):
     """Function drives the car back onto the line. 
@@ -228,9 +168,14 @@ def main(modus, car: CamCar):
 
         if modus == 1: #'Fahrparcours 1 - Vorwärts und Rückwärts'
             print(modi[modus])
-            car.steering_angle
-            print("vorwärts")
             car.drive(30,1)
+            
+            lane_lines = self.average_slope_intercept(frame, line_segments)
+            lane_lines_image = self.display_lines(frame, lane_lines)
+            new_angle = self.compute_steering_angle(self, frame, lane_lines)
+            self.steering_angle = new_angle
+            
+            
             time.sleep(3)
             print("stopp")
             car.stop()
