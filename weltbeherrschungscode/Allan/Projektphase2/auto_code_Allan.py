@@ -237,7 +237,8 @@ class CamCar(SensorCar):
                 ret, frame = self.VideoCapture.read()
         ret, frame = self.VideoCapture.read()
         frame = cv2.flip(frame, -1)
-        return frame, ret if return_ret_value else frame
+        frame = cv2.imencode('test',frame)
+        return frame.tobytes, ret if return_ret_value else frame
 
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames
@@ -308,6 +309,11 @@ class CamCar(SensorCar):
         print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}, angle_delta {angle_delta}, set_delta {set_delta}")
         return steering_angle
     
+    def get_frame_dash(self):
+        success, image = self.video.read()
+        ret, jpeg = cv2.imencode('.jpg', image)
+        return jpeg.tobytes()
+    
     def testCam(self):
         """TEXT
         """
@@ -364,8 +370,11 @@ class CamCar(SensorCar):
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break
+            
+            return frame_total
         # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
         cv2.destroyAllWindows()
+        
     
     def test_cuted_frame(self):
         # Schleife für Video Capturing
@@ -399,7 +408,7 @@ class CamCar(SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = CamCar()
-    car.drive(30,1)
+    car.drive(25,1)
     car.testCam()
     car.stop()
     #car.test_cuted_frame()
