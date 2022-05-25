@@ -10,10 +10,21 @@
       "forward_A": 0,
       "forward_B": 0,
       "ir_references": [
-            110.055,
-            106.07,
-            95.995,
-            115.93,
-            96.535
-      ]
+            291.67499999999995,
+            289.755,
+            287.995,
+            292.03999999999996,
+            288.115
+      ],
+      "frame_width" : 320,
+      "frame_height" : 240,
+      "hsv_low": [0,0,0],
+      "hsv_high": [180,255,40],
+      "point_1": [0, 80], 
+      "point_2": [10, 33],
+      "point_3": [90, 33],
+      "point_4": [100, 80],
+      "hough_min_threshold": 25,
+      "max_angle_change_1": 2,
+      "max_angle_change_2": 5            
 }
