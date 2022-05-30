@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from auto_code import CamCar
+#from auto_code import CamCar
 
 def detect_color_in_frame(car: CamCar, frame):
     frame_in_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -72,8 +72,8 @@ def generate_lane_lines(frame, line_segments):
     right_fit = []
 
     boundary = 1/3
-    left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 1/3 of the screen
-    right_region_boundary = width * boundary # right lane line segment should be on right 1/3 of the screen
+    left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 2/3 of the screen
+    right_region_boundary = width * boundary # right lane line segment should be on right 2/3 of the screen
 
     for line_segment in line_segments:
         for x1, y1, x2, y2 in line_segment:

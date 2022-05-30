@@ -275,12 +275,21 @@ class CamCar(SensorCar):
             return car.steering_angle
 
         height, width, _ = frame.shape
-        if len(lane_lines) == 1:
+      
+        if len(lane_lines) == 1: # only one line
             max_delta = self.max_angle_change_1
-            print('Only detected one lane line, just follow it. %s' % lane_lines[0])
-            x1, _, x2, _ = lane_lines[0][0]
-            x_offset = x2 - x1
-        else:
+            #print('Only detected one lane line, just follow it. %s' % lane_lines[0])
+            x1, y1, x2, y2 = lane_lines[0][0]
+            line =  np.polyfit((x1, x2), (y1, y2), 1)
+            #y = mx + n
+            m = line[0]
+            if m < 0: #left line
+                x_offset = x2 - int(width / 4)
+            else:
+                x_offset = x2 - int( width * 3 / 4)
+            print(f"Only one lane line detected. {lane_lines[0]}") #, offset {x_offset}, m {m}")
+
+        else: # two lines
             max_delta = self.max_angle_change_2
             _, _, left_x2, _ = lane_lines[0][0]
             _, _, right_x2, _ = lane_lines[1][0]
@@ -320,10 +329,10 @@ class CamCar(SensorCar):
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
             # Bildmanipulation ----------
-            #frame_blur=cv2.blur(frame,(5,5))
+            frame_blur=cv2.blur(frame,(5,5))
              
             #Frame in HSV wandeln und auf Blau filtern 
-            frame_in_color_range = detect_color_in_frame(self, frame)
+            frame_in_color_range = detect_color_in_frame(self, frame_blur)
 
             #Kanten im Frame finden 
             frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
@@ -356,7 +365,7 @@ class CamCar(SensorCar):
             frame_total = np.vstack((frame_left, frame_right))
 
             height, width, _ = frame_total.shape
-            frame_total = cv2.resize(frame_total,(int(width*3/4), int(height*3/4)), interpolation = cv2.INTER_CUBIC)
+            frame_total = cv2.resize(frame_total,(int(width*2), int(height*2)), interpolation = cv2.INTER_CUBIC)
 
             # ---------------------------
             # Display des Frames
@@ -399,7 +408,7 @@ class CamCar(SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = CamCar()
-    #car.drive(25,1)
+    #car.drive(30 ,1)
     car.testCam()
     car.stop()
     #car.test_cuted_frame()
