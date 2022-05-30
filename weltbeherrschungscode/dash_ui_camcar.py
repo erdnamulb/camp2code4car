@@ -36,7 +36,7 @@ def video_feed():
     Returns:
         Response: Response object with the video feed
     """
-    return Response(car.get_image_frame(),
+    return Response(car.get_image_bytes(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
