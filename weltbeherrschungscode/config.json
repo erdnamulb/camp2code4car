@@ -16,8 +16,8 @@
             292.03999999999996,
             288.115
       ],
-      "frame_width" : 800,
-      "frame_height" : 600,
+      "frame_width" : 320,
+      "frame_height" : 240,
       "hsv_low": [60,40,40],
       "hsv_high": [120,255,255],
       "point_1": [0, 80], 
