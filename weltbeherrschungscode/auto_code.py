@@ -238,6 +238,30 @@ class CamCar(SensorCar):
         ret, frame = self.VideoCapture.read()
         frame = cv2.flip(frame, -1)
         return frame, ret if return_ret_value else frame
+    
+    def get_jpeg(self, frame=None):
+        """Returns the current frame as .jpeg/raw bytes file
+        Args:
+            frame (list): frame which should be saved.
+        Returns:
+            bytes: returns the frame as raw bytes
+        """
+        if frame is None:
+            frame = self.get_frame()
+        _,x = cv2.imencode('.jpeg', frame)
+        return x.tobytes()
+        
+    def get_image_bytes(self):
+        """Generator for the images from the camera for the live view in dash
+        Yields:
+            bytes: Bytes string with the image information
+        """
+        while True:
+            jepg = self.cam.get_jpeg(self._lineframe)
+
+            yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + jepg + b'\r\n\r\n')
+            time.sleep(0.1)
 
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames

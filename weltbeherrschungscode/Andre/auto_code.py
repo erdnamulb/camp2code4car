@@ -2,7 +2,7 @@ import sys
 from basisklassen import *
 import loggingc2c as log
 import cv2
-#from frame_editing import *
+from frame_editing import *
 
 class BaseCar():
     """Base Class to define the car movement
@@ -214,7 +214,6 @@ class CamCar(SensorCar):
 
     def __init__(self, skip_frame=2, cam_number=0):
         super().__init__()
-        self._lineframe = None
         self.skip_frame = skip_frame
         self.VideoCapture = cv2.VideoCapture(cam_number)#, cv2.CAP_V4L)
         if not self.VideoCapture.isOpened():
@@ -237,33 +236,8 @@ class CamCar(SensorCar):
             for i in range(int(self.skip_frame)):
                 ret, frame = self.VideoCapture.read()
         ret, frame = self.VideoCapture.read()
-        frame = cv2.flip(frame, -1)
-        frame = cv2.imencode('test',frame)
-        return frame.tobytes, ret if return_ret_value else frame
-    
-    def get_jpeg(self, frame=None):
-        '''Returns the current frame as.jpeg/raw bytes files
-        
-        Args:
-            frame (list): frame which should be saved.
-            
-        Returns:
-            bytes: returns the frame as raw bytes
-        '''
-        if frame is None:
-            frame = self.get_frame()
-        _,x = cv2.imencode('.jpeg', frame)
-        return x.tobytes()
-        
-        
-    def get_image_frame(self):
-        ''' Generator for the images from camera for the live view in dash
-        '''
-        while True:
-            frame = self.get_jpeg()
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
-            time.sleep(0.1)
+        #frame = cv2.flip(frame, -1)
+        return frame, ret if return_ret_value else frame
 
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames
@@ -334,11 +308,6 @@ class CamCar(SensorCar):
         print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}, angle_delta {angle_delta}, set_delta {set_delta}")
         return steering_angle
     
-    def get_frame_dash(self):
-        success, image = self.video.read()
-        ret, jpeg = cv2.imencode('.jpg', image)
-        return jpeg.tobytes()
-    
     def testCam(self):
         """TEXT
         """
@@ -395,11 +364,8 @@ class CamCar(SensorCar):
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break
-            
-            return frame_total
         # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
         cv2.destroyAllWindows()
-        
     
     def test_cuted_frame(self):
         # Schleife für Video Capturing
@@ -429,13 +395,11 @@ class CamCar(SensorCar):
         """Releases the camera so it can be used by other programs.
         """
         self.VideoCapture.release()
-   
-    
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     # car anlegen
     car = CamCar()
-    car.drive(25,1)
+    #car.drive(25,1)
     car.testCam()
     car.stop()
     #car.test_cuted_frame()

@@ -2,6 +2,7 @@ import sys
 from basisklassen import *
 import loggingc2c as log
 import cv2
+from frame_editing import *
 
 class BaseCar():
     """Base Class to define the car movement
@@ -113,6 +114,17 @@ class SensorCar(SonicCar):
                 self.offtrack_fw = data["offtrack_fw"]
                 self.offtrack_bw = data["offtrack_bw"]
                 self.ir_intervall = data["ir_intervall"]
+                self.frame_width = data["frame_width"] # Bildbreite
+                self.frame_height = data["frame_height"] # Bildhöhe
+                self.hsv_low = data["hsv_low"]
+                self.hsv_high = data["hsv_high"]
+                self.point_1 = data["point_1"]
+                self.point_2 = data["point_2"]
+                self.point_3 = data["point_3"]
+                self.point_4 = data["point_4"]
+                self.hough_min_threshold = data["hough_min_threshold"]
+                self.max_angle_change_1 = data["max_angle_change_1"]
+                self.max_angle_change_2 = data["max_angle_change_2"]
                 print("Json-File: ", data)
         except:
             ir_references = [100, 100, 100, 100, 100]
@@ -208,8 +220,8 @@ class CamCar(SensorCar):
             print("Cannot open camera")
             self.VideoCapture.release()
             exit()
-        self.VideoCapture.set(cv2.CAP_PROP_FRAME_WIDTH,800)
-        self.VideoCapture.set(cv2.CAP_PROP_FRAME_HEIGHT,600)
+        self.VideoCapture.set(cv2.CAP_PROP_FRAME_WIDTH,self.frame_width)
+        self.VideoCapture.set(cv2.CAP_PROP_FRAME_HEIGHT,self.frame_height)
         self.VideoCapture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self._imgsize = (int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)),
                          int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
@@ -226,104 +238,75 @@ class CamCar(SensorCar):
         ret, frame = self.VideoCapture.read()
         frame = cv2.flip(frame, -1)
         return frame, ret if return_ret_value else frame
+
+    def get_steering_angle_from_cam(self):
+         # Abfrage eines Frames
+        frame, ret = self.get_frame(True)
+        # Wenn ret == TRUE, so war Abfrage erfolgreich
+        if not ret:
+            print("Can't receive frame (stream end?). Exiting ...")
+            return
+
+        # Bildauswertung ----------
+        #Frame in HSV wandeln und auf Blau filtern 
+        frame_in_color_range = detect_color_in_frame(self, frame)
+        #Kanten im Frame finden 
+        frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
+        #Bild beschneiden auf intersssanten Bildausschnitt
+        frame_cuted_regions = cutout_region_of_interest(frame_canny_edges)
+        #Liniensegmente mit HoughLinesP finden
+        line_segments = detect_line_segments(self, frame_cuted_regions)
+        #Fahrbahnbegrenzung erzeugen
+        lane_lines = generate_lane_lines(frame, line_segments)
+        #Lenkwinkel berechnen
+        angle = self.compute_steering_angle(frame, lane_lines)
+
+        return angle, frame, lane_lines
     
-    def region_of_interest(self, edges):
-        height, width = edges.shape
-        mask = np.zeros_like(edges)
-
-        # only focus bottom half of the screen
-        polygon = np.array([[
-            (0, 4/5 * height),
-            (1/4 * width, 1/3 * height),
-            (3/4 * width, 1/3 * height),
-            (width, 4/5 * height),
-        ]], np.int32)
-
-        cv2.fillPoly(mask, polygon, 255)
-        cropped_edges = cv2.bitwise_and(edges, mask)
-        return cropped_edges
-
-    def detect_line_segments(self, cropped_edges):
-        # tuning min_threshold, minLineLength, maxLineGap is a trial and error process by hand
-        rho = 1  # distance precision in pixel, i.e. 1 pixel
-        angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
-        min_threshold = 10  # minimal of votes
-        line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4)
-        return line_segments
-
-    def draw_line_segments(self, line_segments, img):
-        img2 = img.copy()
-        for line in line_segments:
-            x1,y1,x2,y2 = line[0]
-            cv2.line(img2,(x1,y1),(x2,y2),(0,0,255),4)
-        return img2
-    
-    def average_slope_intercept(self, frame, line_segments):
+    def lane_lines_on_frame(self, frame, lane_lines, line_color=(0, 255, 0), line_width=2):
+        return add_lane_lines_to_frame(frame, lane_lines, line_color, line_width)
+        
+    def compute_steering_angle(self, frame, lane_lines):
+        """ Find the steering angle based on lane line coordinate
+            We assume that camera is calibrated to point to dead center
         """
-        This function combines line segments into one or two lane lines
-        If all line slopes are < 0: then we only have detected left lane
-        If all line slopes are > 0: then we only have detected right lane
-        """
-        lane_lines = []
-        if line_segments is None:
-            print('No line_segment segments detected')
-            return lane_lines
+        if len(lane_lines) == 0:
+            print('No lane lines detected, do nothing')
+            return -90
 
         height, width, _ = frame.shape
-        left_fit = []
-        right_fit = []
+        if len(lane_lines) == 1:
+            max_delta = self.max_angle_change_1
+            print('Only detected one lane line, just follow it. %s' % lane_lines[0])
+            x1, _, x2, _ = lane_lines[0][0]
+            x_offset = x2 - x1
+        else:
+            max_delta = self.max_angle_change_2
+            _, _, left_x2, _ = lane_lines[0][0]
+            _, _, right_x2, _ = lane_lines[1][0]
+            #camera_mid_offset_percent = 0.02 # 0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right
+            #mid = int(width / 2 * (1 + camera_mid_offset_percent))
+            mid = int(width / 2)
+            x_offset = (left_x2 + right_x2) / 2 - mid
 
-        boundary = 1/3
-        left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 1/3 of the screen
-        right_region_boundary = width * boundary # right lane line segment should be on right 1/3 of the screen
+        # find the steering angle, which is angle between navigation direction to end of center line
+        y_offset = int(height / 2)
 
-        for line_segment in line_segments:
-            for x1, y1, x2, y2 in line_segment:
-                if x1 == x2:
-                    print('skipping vertical line segment (slope=inf): %s' % line_segment)
-                    continue
-                fit = np.polyfit((x1, x2), (y1, y2), 1)
-                slope = fit[0]
-                intercept = fit[1]
-                if slope < 0:
-                    if x1 < left_region_boundary and x2 < left_region_boundary:
-                        left_fit.append((slope, intercept))
-                else:
-                    if x1 > right_region_boundary and x2 > right_region_boundary:
-                        right_fit.append((slope, intercept))
+        angle_to_mid_radian = math.atan(x_offset / y_offset)  # angle (in radian) to center vertical line
+        angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
+        calc_steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel
 
-        left_fit_average = np.average(left_fit, axis=0)
-        if len(left_fit) > 0:
-            lane_lines.append(self.make_points(frame, left_fit_average))
+        #limt steering angle
+        angle_delta = calc_steering_angle - self.steering_angle
+        if abs(angle_delta) > max_delta:
+            steering_angle = int(calc_steering_angle + 
+                                max_delta * angle_delta / abs(angle_delta))
+        else:
+            steering_angle = calc_steering_angle
 
-        right_fit_average = np.average(right_fit, axis=0)
-        if len(right_fit) > 0:
-            lane_lines.append(self.make_points(frame, right_fit_average))
-
-        print('lane lines: %s' % lane_lines)  # [[[316, 720, 484, 432]], [[1009, 720, 718, 432]]]
-
-        return lane_lines
+        print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}")
+        return steering_angle
     
-    def make_points(self, frame, line):
-        height, width, _ = frame.shape
-        slope, intercept = line
-        y1 = height  # bottom of the frame
-        y2 = int(y1 * 1 / 2)  # make points from middle of the frame down
-
-        # bound the coordinates within the frame
-        x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
-        x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
-        return [[x1, y1, x2, y2]]
-    
-    def display_lines(self, frame, lines, line_color=(0, 255, 0), line_width=2):
-        line_image = np.zeros_like(frame)
-        if lines is not None:
-            for line in lines:
-                for x1, y1, x2, y2 in line:
-                    cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
-        line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
-        return line_image
-
     def testCam(self):
         """TEXT
         """
@@ -337,40 +320,87 @@ class CamCar(SensorCar):
                 break
             # Bildmanipulation ----------
             #frame_blur=cv2.blur(frame,(5,5))
+             
+            #Frame in HSV wandeln und auf Blau filtern 
+            frame_in_color_range = detect_color_in_frame(self, frame)
+
+            #Kanten im Frame finden 
+            frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
             
-            frame_in_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            lower_blue = np.array([60,40,40]) #([60,100,75])
-            upper_blue = np.array([120,255,255])
-            frame_hsv_in_color_range = cv2.inRange(frame_in_hsv, lower_blue,upper_blue)
-            #frame_hsv_in_color_range=cv2.blur(frame_hsv_in_color_range,(5,5))
-            frame_canny_edges = cv2.Canny(frame_hsv_in_color_range,200, 400)
-            frame_cuted_regions = self.region_of_interest(frame_canny_edges)
-            line_segments = self.detect_line_segments(frame_cuted_regions)
-            
+            #Bild beschneiden auf intersssanten Bildausschnitt
+            frame_cuted_regions = cutout_region_of_interest(self, frame_canny_edges)
+            #cv2.imshow("Display window (press q to quit)", frame_cuted_regions)
+
+            #Liniensegmente mit HoughLinesP finden
+            line_segments = detect_line_segments(self, frame_cuted_regions)
             # Display Frame with marks
-            """frame_with_marks = self.draw_line_segments(line_segments, frame)
-            cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
+            frame_with_marks = draw_line_segments(line_segments, frame)
+            #cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
             
-            lane_lines = self.average_slope_intercept(frame, line_segments)
-            lane_lines_image = self.display_lines(frame, lane_lines)
+            #Fahrbahnbegrenzung erzeugen
+            lane_lines = generate_lane_lines(frame, line_segments)
+
+            #Lenkwinkel berechnen
+            angle = self.compute_steering_angle(frame, lane_lines)
+            self.steering_angle = angle
+
+            #Fahrbahnbegrenzung einzeichnen
+            frame_lane_lines = add_lane_lines_to_frame(frame, lane_lines)
             
+            # Frames zumsammen bauen
+            frame_1 = cv2.cvtColor(frame_in_color_range, cv2.COLOR_GRAY2RGB)
+            frame_2 = cv2.cvtColor(frame_cuted_regions, cv2.COLOR_GRAY2RGB)
+            frame_left = np.hstack((frame_1,frame_2))
+            frame_right = np.hstack((frame_with_marks, frame_lane_lines))
+            frame_total = np.vstack((frame_left, frame_right))
+
+            height, width, _ = frame_total.shape
+            frame_total = cv2.resize(frame_total,(int(width*3/4), int(height*3/4)), interpolation = cv2.INTER_CUBIC)
+
             # ---------------------------
             # Display des Frames
-            cv2.imshow("Display window (press q to quit)", lane_lines_image)
+            cv2.imshow("Display window (press q to quit)", frame_total)
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break
         # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
-        self.VideoCapture.release()
         cv2.destroyAllWindows()
     
-    def release(self):
+    def test_cuted_frame(self):
+        # Schleife für Video Capturing
+        while True:
+            # Abfrage eines Frames
+            frame, ret = self.get_frame(True)
+            # Wenn ret == TRUE, so war Abfrage erfolgreich
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+            # Bildmanipulation ----------
+            
+            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame_cut = cutout_region_of_interest(self,frame_gray)
+            cv2.imshow("Display window (press q to quit)", frame_cut)
+
+            # ---------------------------
+            # Display des Frames
+            #cv2.imshow("Display window (press q to quit)", lane_lines_image)
+            # Ende bei Drücken der Taste q
+            if cv2.waitKey(1) == ord('q'):
+                break
+        # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
+        cv2.destroyAllWindows()
+
+    def release_cam(self):
         """Releases the camera so it can be used by other programs.
         """
         self.VideoCapture.release()
 
 if __name__ == '__main__':
-    # car anlegen
+        # car anlegen
     car = CamCar()
+    car.stop()
+    #car.drive(25,1)
     car.testCam()
-    car.release()
+    car.stop()
+    #car.test_cuted_frame()
+    car.release_cam()

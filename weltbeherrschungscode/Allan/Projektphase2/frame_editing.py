@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import math
 from auto_code_Allan import CamCar
 
 def detect_color_in_frame(car: CamCar, frame):
@@ -47,10 +46,13 @@ def detect_line_segments(car: CamCar, frame):
         return line_segments
 
 def draw_line_segments(line_segments, frame):
+    if line_segments is None: # go on, if there is no line
+        return frame
+    frame2 = frame.copy()
     for line in line_segments:
         x1,y1,x2,y2 = line[0]
-        cv2.line(frame,(x1,y1),(x2,y2),(0,0,255),4)
-    return frame
+        cv2.line(frame2,(x1,y1),(x2,y2),(0,0,255),4)
+    return frame2
 
 def generate_lane_lines(frame, line_segments):
     #out of all line segments
@@ -76,7 +78,7 @@ def generate_lane_lines(frame, line_segments):
     for line_segment in line_segments:
         for x1, y1, x2, y2 in line_segment:
             if x1 == x2:
-                print('skipping vertical line segment (slope=inf): %s' % line_segment)
+                #print('skipping vertical line segment (slope=inf): %s' % line_segment)
                 continue
             fit =  np.polyfit((x1, x2), (y1, y2), 1)
             #y = mx + n
@@ -122,34 +124,3 @@ def add_lane_lines_to_frame(frame, lane_lines, line_color=(0, 255, 0), line_widt
                 cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
     line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
     return line_image
-
-def compute_steering_angle(frame, lane_lines):
-        """ Find the steering angle based on lane line coordinate
-            We assume that camera is calibrated to point to dead center
-        """
-        if len(lane_lines) == 0:
-            print('No lane lines detected, do nothing')
-            return -90
-
-        height, width, _ = frame.shape
-        if len(lane_lines) == 1:
-            print('Only detected one lane line, just follow it. %s' % lane_lines[0])
-            x1, _, x2, _ = lane_lines[0][0]
-            x_offset = x2 - x1
-        else:
-            _, _, left_x2, _ = lane_lines[0][0]
-            _, _, right_x2, _ = lane_lines[1][0]
-            #camera_mid_offset_percent = 0.02 # 0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right
-            #mid = int(width / 2 * (1 + camera_mid_offset_percent))
-            mid = int(width / 2)
-            x_offset = (left_x2 + right_x2) / 2 - mid
-
-        # find the steering angle, which is angle between navigation direction to end of center line
-        y_offset = int(height / 2)
-
-        angle_to_mid_radian = math.atan(x_offset / y_offset)  # angle (in radian) to center vertical line
-        angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
-        steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel
-
-        print('new steering angle: %s' % steering_angle)
-        return steering_angle

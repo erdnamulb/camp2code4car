@@ -1,14 +1,17 @@
 import numpy as np
 import cv2
+import math
+from auto_code import CamCar
 
-def detect_color_in_frame(frame):
+def detect_color_in_frame(car: CamCar, frame):
     frame_in_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_blue = np.array(car.hsv_low)  #([60,40,40]) #([60,100,75])
-    upper_blue = np.array(car.hsv_high)   #([120,255,255])
+    lower_blue = np.array(car.hsv_low)  #([60,40,40]) #([60,100,75])     schwarz: 0,0,0
+    upper_blue = np.array(car.hsv_high)   #([120,255,255])   schwarz:180,255,40
     frame_in_color_range = cv2.inRange(frame_in_hsv, lower_blue,upper_blue)
+    #frame_in_color_range_blurred= cv2.blur(frame_in_color_range,(3,3))
     return frame_in_color_range
 
-def cutout_region_of_interest(frame):
+def cutout_region_of_interest(car: CamCar, frame):
         height, width = frame.shape
         mask = np.zeros_like(frame)
 
@@ -37,7 +40,7 @@ def cutout_region_of_interest(frame):
         cuted_frame = cv2.bitwise_and(frame, mask)
         return cuted_frame
 
-def detect_line_segments(frame):
+def detect_line_segments(car: CamCar, frame):
         rho = 1  # distance precision in pixel, i.e. 1 pixel
         angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
         min_threshold = car.hough_min_threshold  # minimal of votes (tested between 10-100)
@@ -45,8 +48,6 @@ def detect_line_segments(frame):
         return line_segments
 
 def draw_line_segments(line_segments, frame):
-    if line_segments is None: # go on, if there is no line
-        return frame
     frame2 = frame.copy()
     for line in line_segments:
         x1,y1,x2,y2 = line[0]
@@ -71,13 +72,13 @@ def generate_lane_lines(frame, line_segments):
     right_fit = []
 
     boundary = 1/3
-    left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 2/3 of the screen
-    right_region_boundary = width * boundary # right lane line segment should be on right 2/3 of the screen
+    left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 1/3 of the screen
+    right_region_boundary = width * boundary # right lane line segment should be on right 1/3 of the screen
 
     for line_segment in line_segments:
         for x1, y1, x2, y2 in line_segment:
             if x1 == x2:
-                #print('skipping vertical line segment (slope=inf): %s' % line_segment)
+                print('skipping vertical line segment (slope=inf): %s' % line_segment)
                 continue
             fit =  np.polyfit((x1, x2), (y1, y2), 1)
             #y = mx + n

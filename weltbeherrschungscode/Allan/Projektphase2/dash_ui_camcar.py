@@ -1,4 +1,5 @@
 import sys
+from cv2 import VideoCapture, cuda_GpuMat_Allocator
 import dash
 import pandas as pd
 from dash import dcc
@@ -11,11 +12,15 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from sqlite3 import connect
 import datetime as dt
-from flask import Flask, Response, request
-from auto_code import CamCar 
+from flask import Flask, Response
 
-server = Flask(__name__)
+from requests import Response
+from frame_editing import *
+from auto_code_Allan import CamCar
+
 app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
+server = Flask(__name__)
+
 #app = dash.Dash(__name__)
 df = pd.DataFrame()
 conn = connect(f'{sys.path[0]}/logdata.sqlite')
@@ -28,20 +33,6 @@ df['time'] = df.apply(
 #print(df)
 features = df.columns[1:len(df.columns)-1]
 
-
-@server.route('/video_feed')
-def video_feed():
-    car = CamCar()
-    """Will return the video feed from the camera
-    Returns:
-        Response: Response object with the video feed
-    """
-    return Response(car.get_image_bytes(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-
-
 speed_max = df['speed'].max()
 speed_min = df['speed'].min()
 speed_mean = round(df['speed'].mean(),2)
@@ -53,6 +44,12 @@ drivetime_str = str(drivetime_tot) + " s"
 distance_tot = round(drivetime_tot * speed_mean * (30/40), 1) # ca. 30cm bei Geschwindigkeit 40 pro s
 distance_str = str(distance_tot) + " cm"
 
+@server.route('/video_feed')
+def video_feed():
+    cam = CamCar()
+    
+    return Response(cam.get_image_frame(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 card_speed_max = dbc.Card(
     [
@@ -166,7 +163,7 @@ COL_Joystick = [
         [
             html.P(id="value_joystick"),
         ],
-        width=3,
+        width=4,
     ),
     ]
 
@@ -232,7 +229,7 @@ COL_Dropdown = [  # Auswahlfeld
 COL_LiveView = [ 
     dbc.Row(
             [  
-                html.H5(
+                html.H2(
                     id="titel_Kamera",
                     children="LiveView",
                     style={
@@ -334,7 +331,8 @@ dbc.Container\
 
 @app.callback(
     Output(component_id='dataplot', component_property='figure'),
-    [Input(component_id='choose_data', component_property='value')])
+    [Input(component_id='choose_data', component_property='value')],)
+
 def graph_update(value_of_input_component):
     fig = px.line(df, x=pd.to_datetime(df['time']), y=df[value_of_input_component],
     title="Gruppe 3 Fahrdaten", 
@@ -394,6 +392,7 @@ def joystick_values(angle, force, switch, max_Speed):
     else:
         debug = "None-Value"
     return debug
+
 
 
 if __name__ == '__main__':

@@ -8,11 +8,11 @@ import loggingc2c as log
 #print (os.path.dirname(sys.path[0]))
 
 
-car = fa.CamCar()
+car = fa.SensorCar()
 
 #car.drive(30, 1)
-car.testCam()
-car.release()
+#car.testCam()
+#car.release()
 
 
 #time.sleep(20)
