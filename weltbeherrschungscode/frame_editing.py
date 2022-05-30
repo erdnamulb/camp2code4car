@@ -1,14 +1,14 @@
 import numpy as np
 import cv2
 
-def detect_color_in_frame(frame):
+def detect_color_in_frame(car, frame):
     frame_in_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     lower_blue = np.array(car.hsv_low)  #([60,40,40]) #([60,100,75])
     upper_blue = np.array(car.hsv_high)   #([120,255,255])
     frame_in_color_range = cv2.inRange(frame_in_hsv, lower_blue,upper_blue)
     return frame_in_color_range
 
-def cutout_region_of_interest(frame):
+def cutout_region_of_interest(car, frame):
         height, width = frame.shape
         mask = np.zeros_like(frame)
 
@@ -37,7 +37,7 @@ def cutout_region_of_interest(frame):
         cuted_frame = cv2.bitwise_and(frame, mask)
         return cuted_frame
 
-def detect_line_segments(frame):
+def detect_line_segments(car, frame):
         rho = 1  # distance precision in pixel, i.e. 1 pixel
         angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
         min_threshold = car.hough_min_threshold  # minimal of votes (tested between 10-100)

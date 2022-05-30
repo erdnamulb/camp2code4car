@@ -3,6 +3,7 @@ from basisklassen import *
 import loggingc2c as log
 import cv2
 from frame_editing import *
+from datetime import time
 
 class BaseCar():
     """Base Class to define the car movement
@@ -273,13 +274,13 @@ class CamCar(SensorCar):
 
         # Bildauswertung ----------
         #Frame in HSV wandeln und auf Blau filtern 
-        frame_in_color_range = detect_color_in_frame(self, frame)
+        frame_in_color_range = detect_color_in_frame(car, frame)
         #Kanten im Frame finden 
         frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
         #Bild beschneiden auf intersssanten Bildausschnitt
-        frame_cuted_regions = cutout_region_of_interest(frame_canny_edges)
+        frame_cuted_regions = cutout_region_of_interest(car, frame_canny_edges)
         #Liniensegmente mit HoughLinesP finden
-        line_segments = detect_line_segments(self, frame_cuted_regions)
+        line_segments = detect_line_segments(car, frame_cuted_regions)
         #Fahrbahnbegrenzung erzeugen
         lane_lines = generate_lane_lines(frame, line_segments)
         #Lenkwinkel berechnen
@@ -356,17 +357,17 @@ class CamCar(SensorCar):
             frame_blur=cv2.blur(frame,(5,5))
              
             #Frame in HSV wandeln und auf Blau filtern 
-            frame_in_color_range = detect_color_in_frame(self, frame_blur)
+            frame_in_color_range = detect_color_in_frame(car, frame_blur)
 
             #Kanten im Frame finden 
             frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
             
             #Bild beschneiden auf intersssanten Bildausschnitt
-            frame_cuted_regions = cutout_region_of_interest(self, frame_canny_edges)
+            frame_cuted_regions = cutout_region_of_interest(car, frame_canny_edges)
             #cv2.imshow("Display window (press q to quit)", frame_cuted_regions)
 
             #Liniensegmente mit HoughLinesP finden
-            line_segments = detect_line_segments(self, frame_cuted_regions)
+            line_segments = detect_line_segments(car, frame_cuted_regions)
             # Display Frame with marks
             frame_with_marks = draw_line_segments(line_segments, frame)
             #cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
@@ -394,6 +395,14 @@ class CamCar(SensorCar):
             # ---------------------------
             # Display des Frames
             cv2.imshow("Display window (press q to quit)", frame_total)
+            #Bilder speichern
+            """i = 0
+            print(f"i: {i}")
+            if i % 2 == 0: #Modulo
+                cv2.imwrite(f"weltbeherrschungscode/Stefan/Bilder/{i}.jpg", frame)
+            i += 1
+"""
+
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break
