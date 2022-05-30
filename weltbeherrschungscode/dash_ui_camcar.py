@@ -7,17 +7,18 @@ import dash_daq as daq
 #import dash_html_components as html
 from dash import html
 import plotly.express as px
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from sqlite3 import connect
 import datetime as dt
+from auto_code import CamCar 
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
 #app = dash.Dash(__name__)
 df = pd.DataFrame()
-#conn = connect(f'{sys.path[0]}/logdata.sqlite')
-conn = connect(f'{sys.path[0]}/P5_45speed_5ms_300_q.sqlite')
+conn = connect(f'{sys.path[0]}/logdata.sqlite')
+#conn = connect(f'{sys.path[0]}/P5_45speed_5ms_300_q.sqlite')
 df = pd.read_sql('SELECT timestamp, distance, ir1, ir2, ir3, ir4, ir5, speed, direction, angle FROM drivedata', conn)
 df = df[df['timestamp'] != '0']   # Zeilen mit 0 im Zeitstempel ausfiltern
 # print(df)
@@ -325,6 +326,60 @@ def graph_update(value_of_input_component):
     title="Gruppe 3 Fahrdaten", 
     labels={'x': 'Zeit', 'y':value_of_input_component})
     return fig
+
+@app.callback(
+    Output("value_joystick", "children"),
+    Input("joystick", "angle"),
+    Input("joystick", "force"),
+    State("sw_manual", "value"),
+    State("slider_speed", "value"),
+)
+
+def joystick_values(angle, force, switch, max_Speed):
+    car = CamCar()
+    """Steuerung über Joystick
+        berechnet anhand der Joystick-Werte den Lenkeinschlag
+        und mit der eingestellten Maximalgeschwindigkeit
+        die Fahrgeschwindigkeit.
+    Args:
+        angle (float): Winkelwert des Joysticks
+        force (float): Kraftweg des Joysticks
+        switch (bool): Schalter "manuelle Fahrt"
+        max_Speed (int): Wert Slider "slider_speed"
+    Returns:
+        str: gibt die ermittelten Sollwerte zurück
+    """
+    debug = ""
+    if angle != None and force != None:
+        if switch:
+            power = round(force, 1)
+            winkel = 0
+            dir = 0
+            if force == 0:
+                winkel = 0
+                dir = 0
+                car.drive(0, 0)
+                car.steering_angle = 90
+            else:
+                power = power * max_Speed
+                if power > max_Speed:
+                    power = max_Speed
+                if angle <= 180:
+                    dir = 1
+                    winkel = round(45 - (angle / 2), 0)
+                else:
+                    dir = -1
+                    winkel = round(((angle - 180) / 2) - 45, 0)
+                car.drive(int(power), dir)
+                car.steering_angle = winkel+90
+                debug = f"Angle: {winkel} speed: {power} dir: {dir}"
+        else:
+            debug = "Man. mode off"
+            car.drive(0, 0)
+            car.steering_angle = 90
+    else:
+        debug = "None-Value"
+    return debug
 
 
 if __name__ == '__main__':
