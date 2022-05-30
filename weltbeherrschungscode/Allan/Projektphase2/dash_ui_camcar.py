@@ -54,7 +54,7 @@ def gen():
 
 @server.route('/video_feed')
 def video_feed():
-    return Response(gen(CamCar()),
+    return Response(cam.get_image_frame(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 card_speed_max = dbc.Card(
@@ -337,7 +337,8 @@ dbc.Container\
 
 @app.callback(
     Output(component_id='dataplot', component_property='figure'),
-    [Input(component_id='choose_data', component_property='value')])
+    [Input(component_id='choose_data', component_property='value')],
+    )
 def graph_update(value_of_input_component):
     fig = px.line(df, x=pd.to_datetime(df['time']), y=df[value_of_input_component],
     title="Gruppe 3 Fahrdaten", 
