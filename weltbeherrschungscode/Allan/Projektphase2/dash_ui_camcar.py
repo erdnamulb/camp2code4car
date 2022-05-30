@@ -8,7 +8,7 @@ import dash_daq as daq
 #import dash_html_components as html
 from dash import html
 import plotly.express as px
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from sqlite3 import connect
 import datetime as dt
@@ -16,6 +16,7 @@ from flask import Flask, Response
 
 from requests import Response
 from frame_editing import *
+from auto_code_Allan import CamCar
 
 app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
 server = Flask(__name__)
@@ -32,7 +33,6 @@ df['time'] = df.apply(
 #print(df)
 features = df.columns[1:len(df.columns)-1]
 
-#cam = CamCar()
 speed_max = df['speed'].max()
 speed_min = df['speed'].min()
 speed_mean = round(df['speed'].mean(),2)
@@ -44,16 +44,10 @@ drivetime_str = str(drivetime_tot) + " s"
 distance_tot = round(drivetime_tot * speed_mean * (30/40), 1) # ca. 30cm bei Geschwindigkeit 40 pro s
 distance_str = str(distance_tot) + " cm"
 
-def gen():
-    cam = CamCar
-    while True:
-        frame = cam.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
-
-
 @server.route('/video_feed')
 def video_feed():
+    cam = CamCar()
+    
     return Response(cam.get_image_frame(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -160,16 +154,16 @@ COL_Manual = [
     ]
 
 COL_Joystick = [
-    dbc.Col([
+        dbc.Col([
         html.H5("Car-Stick"),
         daq.Joystick(id="joystick", size=100, className="mb-3")],
-        #width=4,
+        width=4,
     ),
     dbc.Col(
         [
             html.P(id="value_joystick"),
         ],
-        width=3,
+        width=4,
     ),
     ]
 
@@ -235,7 +229,7 @@ COL_Dropdown = [  # Auswahlfeld
 COL_LiveView = [ 
     dbc.Row(
             [  
-                html.H1(
+                html.H2(
                     id="titel_Kamera",
                     children="LiveView",
                     style={
@@ -344,6 +338,61 @@ def graph_update(value_of_input_component):
     title="Gruppe 3 Fahrdaten", 
     labels={'x': 'Zeit', 'y':value_of_input_component})
     return fig
+
+@app.callback(
+    Output("value_joystick", "children"),
+    Input("joystick", "angle"),
+    Input("joystick", "force"),
+    State("sw_manual", "value"),
+    State("slider_speed", "value"),
+)
+
+def joystick_values(angle, force, switch, max_Speed):
+    car = CamCar()
+    """Steuerung über Joystick
+        berechnet anhand der Joystick-Werte den Lenkeinschlag
+        und mit der eingestellten Maximalgeschwindigkeit
+        die Fahrgeschwindigkeit.
+    Args:
+        angle (float): Winkelwert des Joysticks
+        force (float): Kraftweg des Joysticks
+        switch (bool): Schalter "manuelle Fahrt"
+        max_Speed (int): Wert Slider "slider_speed"
+    Returns:
+        str: gibt die ermittelten Sollwerte zurück
+    """
+    debug = ""
+    if angle != None and force != None:
+        if switch:
+            power = round(force, 1)
+            winkel = 0
+            dir = 0
+            if force == 0:
+                winkel = 0
+                dir = 0
+                car.drive(0, 0)
+                car.steering_angle = 90
+            else:
+                power = power * max_Speed
+                if power > max_Speed:
+                    power = max_Speed
+                if angle <= 180:
+                    dir = 1
+                    winkel = round(45 - (angle / 2), 0)
+                else:
+                    dir = -1
+                    winkel = round(((angle - 180) / 2) - 45, 0)
+                car.drive(int(power), dir)
+                car.steering_angle = winkel+90
+                debug = f"Angle: {winkel} speed: {power} dir: {dir}"
+        else:
+            debug = "Man. mode off"
+            car.drive(0, 0)
+            car.steering_angle = 90
+    else:
+        debug = "None-Value"
+    return debug
+
 
 
 if __name__ == '__main__':

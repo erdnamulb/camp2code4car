@@ -2,7 +2,7 @@ import sys
 from basisklassen import *
 import loggingc2c as log
 import cv2
-from frame_editing import *
+#from frame_editing import *
 
 class BaseCar():
     """Base Class to define the car movement
@@ -214,6 +214,7 @@ class CamCar(SensorCar):
 
     def __init__(self, skip_frame=2, cam_number=0):
         super().__init__()
+        self._lineframe = None
         self.skip_frame = skip_frame
         self.VideoCapture = cv2.VideoCapture(cam_number)#, cv2.CAP_V4L)
         if not self.VideoCapture.isOpened():
@@ -239,6 +240,30 @@ class CamCar(SensorCar):
         frame = cv2.flip(frame, -1)
         frame = cv2.imencode('test',frame)
         return frame.tobytes, ret if return_ret_value else frame
+    
+    def get_jpeg(self, frame=None):
+        '''Returns the current frame as.jpeg/raw bytes files
+        
+        Args:
+            frame (list): frame which should be saved.
+            
+        Returns:
+            bytes: returns the frame as raw bytes
+        '''
+        if frame is None:
+            frame = self.get_frame()
+        _,x = cv2.imencode('.jpeg', frame)
+        return x.tobytes()
+        
+        
+    def get_image_frame(self):
+        ''' Generator for the images from camera for the live view in dash
+        '''
+        while True:
+            frame = self.get_jpeg()
+            yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+            time.sleep(0.1)
 
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames
@@ -404,8 +429,10 @@ class CamCar(SensorCar):
         """Releases the camera so it can be used by other programs.
         """
         self.VideoCapture.release()
+   
+    
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
     # car anlegen
     car = CamCar()
     car.drive(25,1)
