@@ -390,18 +390,17 @@ class CamCar(SensorCar):
             frame_total = np.vstack((frame_left, frame_right))
 
             height, width, _ = frame_total.shape
-            frame_total = cv2.resize(frame_total,(int(width*1), int(height*1)), interpolation = cv2.INTER_CUBIC)
+            frame_total = cv2.resize(frame_total,(int(width*0.5), int(height*0.5)), interpolation = cv2.INTER_CUBIC)
 
             # ---------------------------
             # Display des Frames
             cv2.imshow("Display window (press q to quit)", frame_total)
             #Bilder speichern
-            """i = 0
+            i = 0
             print(f"i: {i}")
             if i % 2 == 0: #Modulo
-                cv2.imwrite(f"weltbeherrschungscode/Stefan/Bilder/{i}.jpg", frame)
+                cv2.imwrite(f"weltbeherrschungscode/Allan/Bilder/{i}.jpg", frame)
             i += 1
-"""
 
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
