@@ -143,10 +143,10 @@ COL_Manual = [
     ]
 
 COL_Joystick = [
-    dbc.Col([
+        dbc.Col([
         html.H5("Car-Stick"),
         daq.Joystick(id="joystick", size=100, className="mb-3")],
-        #width=4,
+        width=4,
     ),
     dbc.Col(
         [
