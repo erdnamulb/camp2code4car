@@ -11,9 +11,10 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from sqlite3 import connect
 import datetime as dt
+from flask import Flask, Response, request
 from auto_code import CamCar 
 
-
+server = Flask(__name__)
 app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
 #app = dash.Dash(__name__)
 df = pd.DataFrame()
@@ -26,6 +27,19 @@ df['time'] = df.apply(
     lambda row: dt.datetime.fromtimestamp(float(row.timestamp)), axis=1)
 #print(df)
 features = df.columns[1:len(df.columns)-1]
+
+
+@server.route('/video_feed')
+def video_feed():
+    car = CamCar()
+    """Will return the video feed from the camera
+    Returns:
+        Response: Response object with the video feed
+    """
+    return Response(car.get_image_frame(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 
 
 speed_max = df['speed'].max()
