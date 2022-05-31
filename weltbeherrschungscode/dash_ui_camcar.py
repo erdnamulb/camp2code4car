@@ -1,4 +1,5 @@
 import sys
+import socket
 import dash
 import pandas as pd
 from dash import dcc
@@ -12,7 +13,9 @@ import dash_bootstrap_components as dbc
 from sqlite3 import connect
 import datetime as dt
 from flask import Flask, Response, request
-from auto_code import CamCar 
+import auto_code as ac
+
+car = ac.CamCar()
 
 server = Flask(__name__)
 app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
@@ -28,10 +31,20 @@ df['time'] = df.apply(
 #print(df)
 features = df.columns[1:len(df.columns)-1]
 
+def get_ip_address():
+    """Ermittlung der IP-Adresse im Netzwerk
+    Returns:
+        str: lokale IP-Adresse
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    socket_ip = s.getsockname()[0]
+    s.close()
+    return socket_ip
+
 
 @server.route('/video_feed')
 def video_feed():
-    car = CamCar()
     """Will return the video feed from the camera
     Returns:
         Response: Response object with the video feed
@@ -156,19 +169,24 @@ COL_Manual = [
         ),
     ]
 
-COL_Joystick = [
-        dbc.Col([
-        html.H5("Car-Stick"),
-        daq.Joystick(id="joystick", size=100, className="mb-3")],
+COL_Joystick = dbc.Row(
+    [
+        dbc.Col(
+            [
+                html.H5("Car-Stick"),
+                daq.Joystick(id="joystick", size=100, className="mb-3")
+            ],
         width=4,
-    ),
-    dbc.Col(
+        ),
+        dbc.Col(
         [
             html.P(id="value_joystick"),
         ],
-        width=3,
-    ),
+        width=4,
+        ),
     ]
+)
+
 
 COL_Slider = [
     dbc.Col([html.H5("vMax:")], width=5),
@@ -350,7 +368,6 @@ def graph_update(value_of_input_component):
 )
 
 def joystick_values(angle, force, switch, max_Speed):
-    car = CamCar()
     """Steuerung über Joystick
         berechnet anhand der Joystick-Werte den Lenkeinschlag
         und mit der eingestellten Maximalgeschwindigkeit
@@ -397,4 +414,5 @@ def joystick_values(angle, force, switch, max_Speed):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False, host=get_ip_address())
+

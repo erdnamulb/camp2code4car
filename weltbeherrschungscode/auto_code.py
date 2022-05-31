@@ -260,7 +260,7 @@ class CamCar(SensorCar):
             bytes: Bytes string with the image information
         """
         while True:
-            jepg = self.cam.get_jpeg(self._lineframe)
+            jepg = self.get_jpeg(self._lineframe)
 
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + jepg + b'\r\n\r\n')
