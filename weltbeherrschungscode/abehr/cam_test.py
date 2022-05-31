@@ -7,7 +7,7 @@ def draw_line_segments(line_segments,img):
     if line_segments is not None: # Könnte None sein, wenn Hough keine Linie erkennt!
         for line in line_segments:
             x1,y1,x2,y2 = line[0]
-            cv.line(img2,(x1,y1),(x2,y2),(255,0,0),1)
+            cv.line(img2,(x1,y1),(x2,y2),(255,0,0),-1)
     return img2
 
 # Erstellen eines Objektes für den Kamerazugriff
@@ -21,13 +21,13 @@ while True:
     # Abfrage eines Frames
     ret, frame = cap.read()
     height, width, _ = frame.shape
-    frame = cv.resize(frame,(int(width*2/3), int(height*2/3)), interpolation = cv.INTER_CUBIC)
+    frame = cv.resize(frame,(int(width*1/3), int(height*1/3)), interpolation = cv.INTER_CUBIC)
     # Wenn ret == TRUE, so war Abfrage erfolgreich
     if not ret:
         print("Can't receive frame (stream end?). Exiting ...")
         break
     # Bildmanipulation ----------
-    frame_to_display = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    frame_to_display = cv.cvtColor(frame, cv.COLOR_RGB2HSV)
     # ---------------------------
     # Display des Frames
     cv.imshow("Display window (press q to quit)", frame_to_display)
