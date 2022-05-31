@@ -17,6 +17,7 @@ def follow_road(car: CamCar, with_distance :bool = False):
         # Lenkwinkel berechnen lassen
         steering_angle, frame, lane_lines = car.get_steering_angle_from_cam()
 
+
         """# Abstandsüberwachung
         if with_distance:
             if distance < 12 and distance > 0:
@@ -90,6 +91,7 @@ if __name__ == '__main__':
         modus = None
 
     #main(modus, car)
+    car.drive(20,1)
     follow_road(car)
 
     car.stop()
