@@ -1,9 +1,15 @@
 import sys
+import os.path
+import json
+import uuid
 from basisklassen import *
+import matplotlib.pyplot as plt
 import loggingc2c as log
 import cv2
 from frame_editing import *
 from datetime import time
+
+take_image = False
 
 class BaseCar():
     """Base Class to define the car movement
@@ -212,6 +218,8 @@ class SensorCar(SonicCar):
         log.write_log_to_db(self._db_path, self.df)
 
 class CamCar(SensorCar):
+    
+    take_image = False
 
     def __init__(self, skip_frame=2, cam_number=0):
         super().__init__()
@@ -227,7 +235,7 @@ class CamCar(SensorCar):
         self._imgsize = (int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)),
                          int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-    def get_frame(self, return_ret_value=False):
+    def get_frame(self):
         """Returns current frame recorded by the camera
 
         Returns:
@@ -235,15 +243,22 @@ class CamCar(SensorCar):
         """
         if self.skip_frame:
             for i in range(int(self.skip_frame)):
-                ret, frame = self.VideoCapture.read()
-        ret, frame = self.VideoCapture.read()
+                _, frame = self.VideoCapture.read()
+        _, frame = self.VideoCapture.read()
         frame = cv2.flip(frame, -1)
-        return frame, ret if return_ret_value else frame
+        return frame
+
+    def show_frame(self):
+        """Plots the current frame
+        """
+        plt.imshow(self.get_frame())
     
     def get_jpeg(self, frame=None):
         """Returns the current frame as .jpeg/raw bytes file
+
         Args:
             frame (list): frame which should be saved.
+
         Returns:
             bytes: returns the frame as raw bytes
         """
@@ -251,18 +266,6 @@ class CamCar(SensorCar):
             frame = self.get_frame()
         _,x = cv2.imencode('.jpeg', frame)
         return x.tobytes()
-        
-    def get_image_bytes(self):
-        """Generator for the images from the camera for the live view in dash
-        Yields:
-            bytes: Bytes string with the image information
-        """
-        while True:
-            jepg = self.cam.get_jpeg(self._lineframe)
-
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + jepg + b'\r\n\r\n')
-            time.sleep(0.1)
 
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames
