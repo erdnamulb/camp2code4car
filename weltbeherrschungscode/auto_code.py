@@ -3,7 +3,7 @@ from basisklassen import *
 import loggingc2c as log
 import cv2
 from frame_editing import *
-from datetime import time
+from datetime import datetime
 
 class BaseCar():
     """Base Class to define the car movement
@@ -126,6 +126,8 @@ class SensorCar(SonicCar):
                 self.hough_min_threshold = data["hough_min_threshold"]
                 self.max_angle_change_1 = data["max_angle_change_1"]
                 self.max_angle_change_2 = data["max_angle_change_2"]
+                self.zoom_factor = data["zoom_factor"]
+                self.pic_folder = data["pic_folder"]
                 print("Json-File: ", data)
         except:
             ir_references = [100, 100, 100, 100, 100]
@@ -346,6 +348,7 @@ class CamCar(SensorCar):
         """TEXT
         """
         # Schleife für Video Capturing
+        modulo_counter = 0
         while True:
             # Abfrage eines Frames
             frame, ret = self.get_frame(True)
@@ -390,18 +393,18 @@ class CamCar(SensorCar):
             frame_total = np.vstack((frame_left, frame_right))
 
             height, width, _ = frame_total.shape
-            frame_total = cv2.resize(frame_total,(int(width*2), int(height*2)), interpolation = cv2.INTER_CUBIC)
+            frame_total = cv2.resize(frame_total,(int(width*self.zoom_factor), int(height*self.zoom_factor)), interpolation = cv2.INTER_CUBIC)
 
             # ---------------------------
             # Display des Frames
             cv2.imshow("Display window (press q to quit)", frame_total)
             #Bilder speichern
-            """i = 0
-            print(f"i: {i}")
-            if i % 2 == 0: #Modulo
-                cv2.imwrite(f"weltbeherrschungscode/Stefan/Bilder/{i}.jpg", frame)
-            i += 1
-"""
+            time_stamp = datetime.now()
+            
+            if modulo_counter % 4 == 0: #Modulo --> jedes vierte Bild
+                cv2.imwrite(f"{self.pic_folder}{time_stamp}_{angle:03d}.png", frame)
+            modulo_counter += 1
+            
 
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
