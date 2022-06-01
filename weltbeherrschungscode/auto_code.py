@@ -234,18 +234,17 @@ class CamCar(SensorCar):
         self._imgsize = (int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)),
                          int(self.VideoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-    def get_frame(self):
+    def get_frame(self, return_ret_value=False):
         """Returns current frame recorded by the camera
-
         Returns:
             numpy array: returns current frame as numpy array
         """
         if self.skip_frame:
             for i in range(int(self.skip_frame)):
-                _, frame = self.VideoCapture.read()
-        _, frame = self.VideoCapture.read()
+                ret, frame = self.VideoCapture.read()
+        ret, frame = self.VideoCapture.read()
         frame = cv2.flip(frame, -1)
-        return frame
+        return frame, ret if return_ret_value else frame
     
     def show_frame(self):
         """Plots the current frame
@@ -344,6 +343,11 @@ class CamCar(SensorCar):
         print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}, angle_delta {angle_delta}, set_delta {set_delta}")
         return steering_angle
     
+    def cnn_compute_steering_angle(self, model, frame):
+        #cuted_frame
+        #return steering_angle
+        pass
+    
     def testCam(self):
         """TEXT
         """
@@ -436,6 +440,38 @@ class CamCar(SensorCar):
         # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
         cv2.destroyAllWindows()
 
+    def test_cnn(self):
+        cnn_path = fr"weltbeherrschungscode/Stefan/angle.h5" 
+        load_cnn(cnn_path)
+   
+        # Schleife für Video Capturing
+        while True:
+            # Abfrage eines Frames
+            frame, ret = self.get_frame(True)
+            # Wenn ret == TRUE, so war Abfrage erfolgreich
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+            # Bildmanipulation ----------
+            frame_total = frame_process_cnn(frame)
+
+            #Lenkwinkel berechnen
+            """angle = self.compute_steering_angle(frame, lane_lines)
+            self.steering_angle = angle"""
+
+            height, width, _ = frame_total.shape
+            frame_total = cv2.resize(frame_total,(int(width*2*self.zoom_factor), int(height*2*self.zoom_factor)), interpolation = cv2.INTER_CUBIC)
+
+            # ---------------------------
+            # Display des Frames
+            cv2.imshow("Display window (press q to quit)", frame_total)
+
+            # Ende bei Drücken der Taste q
+            if cv2.waitKey(1) == ord('q'):
+                break
+        # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
+        cv2.destroyAllWindows()
+
     def release_cam(self):
         """Releases the camera so it can be used by other programs.
         """
@@ -446,6 +482,7 @@ if __name__ == '__main__':
     car = CamCar()
     #car.drive(30 ,1)
     car.testCam()
+    #car.test_cnn()
     car.stop()
     #car.test_cuted_frame()
     car.release_cam()
