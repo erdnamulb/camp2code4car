@@ -56,7 +56,7 @@ def generate_camera_image(camera_class):
     if not os.path.exists(os.path.join(os.getcwd(), "images")):
         os.makedirs(os.path.join(os.getcwd(), "images"))
     while True:
-        frame = camera_class.get_frame()
+        frame = camera_class.get_frame_dash()
         jepg = camera_class.get_jpeg(frame)
 
         if car.speed > 0 and take_image:

@@ -1,9 +1,13 @@
 import sys
+import matplotlib.pyplot as plt
+import os.path
 from basisklassen import *
 import loggingc2c as log
 import cv2
-from frame_editing import *
-from datetime import time
+from datetime import datetime
+
+from frame_editing import * 
+take_image = False
 
 class BaseCar():
     """Base Class to define the car movement
@@ -126,6 +130,8 @@ class SensorCar(SonicCar):
                 self.hough_min_threshold = data["hough_min_threshold"]
                 self.max_angle_change_1 = data["max_angle_change_1"]
                 self.max_angle_change_2 = data["max_angle_change_2"]
+                self.zoom_factor = data["zoom_factor"]
+                self.pic_folder = data["pic_folder"]
                 print("Json-File: ", data)
         except:
             ir_references = [100, 100, 100, 100, 100]
@@ -213,6 +219,8 @@ class SensorCar(SonicCar):
 
 class CamCar(SensorCar):
 
+    take_image = False
+
     def __init__(self, skip_frame=2, cam_number=0):
         super().__init__()
         self.skip_frame = skip_frame
@@ -240,10 +248,37 @@ class CamCar(SensorCar):
         frame = cv2.flip(frame, -1)
         return frame, ret if return_ret_value else frame
     
+    def get_frame_dash(self):
+        """Returns current frame recorded by the camera
+
+        Returns:
+            numpy array: returns current frame as numpy array
+        """
+        if self.skip_frame:
+            for i in range(int(self.skip_frame)):
+                _, frame = self.VideoCapture.read()
+        _, frame = self.VideoCapture.read()
+        frame = cv2.flip(frame, -1)
+        
+        frame_blur=cv2.blur(frame,(5,5))
+        frame_in_color_range = detect_color_in_frame(car, frame_blur) 
+
+        
+        return frame_in_color_range
+       
+      
+    
+    def show_frame(self):
+        """Plots the current frame
+        """
+        plt.imshow(self.get_frame())
+    
     def get_jpeg(self, frame=None):
         """Returns the current frame as .jpeg/raw bytes file
+
         Args:
             frame (list): frame which should be saved.
+
         Returns:
             bytes: returns the frame as raw bytes
         """
@@ -251,18 +286,6 @@ class CamCar(SensorCar):
             frame = self.get_frame()
         _,x = cv2.imencode('.jpeg', frame)
         return x.tobytes()
-        
-    def get_image_bytes(self):
-        """Generator for the images from the camera for the live view in dash
-        Yields:
-            bytes: Bytes string with the image information
-        """
-        while True:
-            jepg = self.cam.get_jpeg(self._lineframe)
-
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + jepg + b'\r\n\r\n')
-            time.sleep(0.1)
 
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames
@@ -346,6 +369,7 @@ class CamCar(SensorCar):
         """TEXT
         """
         # Schleife für Video Capturing
+        modulo_counter = 0
         while True:
             # Abfrage eines Frames
             frame, ret = self.get_frame(True)
@@ -390,17 +414,18 @@ class CamCar(SensorCar):
             frame_total = np.vstack((frame_left, frame_right))
 
             height, width, _ = frame_total.shape
-            frame_total = cv2.resize(frame_total,(int(width*0.5), int(height*0.5)), interpolation = cv2.INTER_CUBIC)
+            frame_total = cv2.resize(frame_total,(int(width*self.zoom_factor), int(height*self.zoom_factor)), interpolation = cv2.INTER_CUBIC)
 
             # ---------------------------
             # Display des Frames
             cv2.imshow("Display window (press q to quit)", frame_total)
             #Bilder speichern
-            i = 0
-            print(f"i: {i}")
-            if i % 2 == 0: #Modulo
-                cv2.imwrite(f"weltbeherrschungscode/Allan/Bilder/{i}.jpg", frame)
-            i += 1
+            time_stamp = datetime.now()
+            
+            if modulo_counter % 4 == 0: #Modulo --> jedes vierte Bild
+                cv2.imwrite(f"{self.pic_folder}{time_stamp}_{angle:03d}.png", frame)
+            modulo_counter += 1
+            
 
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
@@ -445,3 +470,4 @@ if __name__ == '__main__':
     car.stop()
     #car.test_cuted_frame()
     car.release_cam()
+

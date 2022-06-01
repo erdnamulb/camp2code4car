@@ -1,15 +1,15 @@
 import numpy as np
 import cv2
-from auto_code_Allan import CamCar
+from sklearn.model_selection import train_test_split
 
-def detect_color_in_frame(car: CamCar, frame):
+def detect_color_in_frame(car, frame):
     frame_in_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     lower_blue = np.array(car.hsv_low)  #([60,40,40]) #([60,100,75])
     upper_blue = np.array(car.hsv_high)   #([120,255,255])
     frame_in_color_range = cv2.inRange(frame_in_hsv, lower_blue,upper_blue)
     return frame_in_color_range
 
-def cutout_region_of_interest(car: CamCar, frame):
+def cutout_region_of_interest(car, frame):
         height, width = frame.shape
         mask = np.zeros_like(frame)
 
@@ -38,7 +38,7 @@ def cutout_region_of_interest(car: CamCar, frame):
         cuted_frame = cv2.bitwise_and(frame, mask)
         return cuted_frame
 
-def detect_line_segments(car: CamCar, frame):
+def detect_line_segments(car, frame):
         rho = 1  # distance precision in pixel, i.e. 1 pixel
         angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
         min_threshold = car.hough_min_threshold  # minimal of votes (tested between 10-100)
@@ -48,7 +48,7 @@ def detect_line_segments(car: CamCar, frame):
 def draw_line_segments(line_segments, frame):
     if line_segments is None: # go on, if there is no line
         return frame
-    frame2 = frame.copy()
+    frame2 = frame.copy() 
     for line in line_segments:
         x1,y1,x2,y2 = line[0]
         cv2.line(frame2,(x1,y1),(x2,y2),(0,0,255),4)
@@ -72,8 +72,8 @@ def generate_lane_lines(frame, line_segments):
     right_fit = []
 
     boundary = 1/3
-    left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 1/3 of the screen
-    right_region_boundary = width * boundary # right lane line segment should be on right 1/3 of the screen
+    left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 2/3 of the screen
+    right_region_boundary = width * boundary # right lane line segment should be on right 2/3 of the screen
 
     for line_segment in line_segments:
         for x1, y1, x2, y2 in line_segment:
@@ -124,3 +124,6 @@ def add_lane_lines_to_frame(frame, lane_lines, line_color=(0, 255, 0), line_widt
                 cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
     line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
     return line_image
+
+def train_cnn(folder):
+    pass

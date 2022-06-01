@@ -1,5 +1,9 @@
 import sys
-from cv2 import VideoCapture, cuda_GpuMat_Allocator
+import os.path
+import sys
+import json
+import uuid
+import socket
 import dash
 import pandas as pd
 from dash import dcc
@@ -12,15 +16,18 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from sqlite3 import connect
 import datetime as dt
-from flask import Flask, Response
+from flask import Flask, Response, request
+sys.path.append(os.path.dirname(sys.path[0]))
+from auto_code import CamCar
+from auto_code import BaseCar
 
-from requests import Response
-from frame_editing import *
-from auto_code_Allan import CamCar
+car = BaseCar()
+take_image = False
 
-app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
 server = Flask(__name__)
-
+app = dash.Dash(__name__,
+    server = server,
+    external_stylesheets=[dbc.themes.FLATLY])
 #app = dash.Dash(__name__)
 df = pd.DataFrame()
 conn = connect(f'{sys.path[0]}/logdata.sqlite')
@@ -33,7 +40,6 @@ df['time'] = df.apply(
 #print(df)
 features = df.columns[1:len(df.columns)-1]
 
-<<<<<<< HEAD
 def generate_camera_image(camera_class):
     """Generator for the images from the camera for the live view in dash
 
@@ -43,17 +49,9 @@ def generate_camera_image(camera_class):
     Yields:
         bytes: Bytes string with the image information
     """
-    image_id = 0
-    run_id = str(uuid.uuid4())[:8]
-    if not os.path.exists(os.path.join(os.getcwd(), "images")):
-        os.makedirs(os.path.join(os.getcwd(), "images"))
     while True:
-        frame = camera_class.get_frame()
+        frame = camera_class.get_frame_dash()
         jepg = camera_class.get_jpeg(frame)
-
-        if car.speed > 0 and take_image:
-            take_an_image(camera_class, image_id, run_id, frame)
-            image_id = image_id + 1
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jepg + b'\r\n\r\n')
@@ -72,6 +70,9 @@ def take_an_image(camera_class, image_id, run_id, frame):
         "images/", f"{run_id}_{image_id}_{int(car.steering_angle):03d}.jpeg", frame)
 
 
+
+
+
 def get_ip_address():
     """Ermittlung der IP-Adresse im Netzwerk
     Returns:
@@ -82,6 +83,7 @@ def get_ip_address():
     socket_ip = s.getsockname()[0]
     s.close()
     return socket_ip
+
 
 @server.route('/video_feed')
 def video_feed():
@@ -95,8 +97,7 @@ def video_feed():
 
 
 
-=======
->>>>>>> 980fe9896b32f7d9ab52230dbe686bc40ab332c2
+
 speed_max = df['speed'].max()
 speed_min = df['speed'].min()
 speed_mean = round(df['speed'].mean(),2)
@@ -108,12 +109,6 @@ drivetime_str = str(drivetime_tot) + " s"
 distance_tot = round(drivetime_tot * speed_mean * (30/40), 1) # ca. 30cm bei Geschwindigkeit 40 pro s
 distance_str = str(distance_tot) + " cm"
 
-@server.route('/video_feed')
-def video_feed():
-    cam = CamCar()
-    
-    return Response(cam.get_image_frame(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 card_speed_max = dbc.Card(
     [
@@ -217,19 +212,24 @@ COL_Manual = [
         ),
     ]
 
-COL_Joystick = [
-        dbc.Col([
-        html.H5("Car-Stick"),
-        daq.Joystick(id="joystick", size=100, className="mb-3")],
+COL_Joystick = dbc.Row(
+    [
+        dbc.Col(
+            [
+                html.H5("Car-Stick"),
+                daq.Joystick(id="joystick", size=100, className="mb-3")
+            ],
         width=4,
-    ),
-    dbc.Col(
+        ),
+        dbc.Col(
         [
             html.P(id="value_joystick"),
         ],
         width=4,
-    ),
+        ),
     ]
+)
+
 
 COL_Slider = [
     dbc.Col([html.H5("vMax:")], width=5),
@@ -306,9 +306,11 @@ COL_LiveView = [
     dbc.Row(
             [  # Kamerabild
                 html.Img(src="/video_feed")
+                
             ]
         ),
 ]
+
 
 app.layout = \
 dbc.Container\
@@ -380,23 +382,23 @@ dbc.Container\
                 COL_Slider,
                 width=2
             ),
+            # fünfte Zeile
             dbc.Col(
                 COL_LiveView,
                 width=8
             ),
-
+            
         ],
         justify="center",
         style={"paddingTop": 20, "paddingBottom": 20},
-    ),
-
+    )
+    
 ])
 
 
 @app.callback(
     Output(component_id='dataplot', component_property='figure'),
-    [Input(component_id='choose_data', component_property='value')],)
-
+    [Input(component_id='choose_data', component_property='value')])
 def graph_update(value_of_input_component):
     fig = px.line(df, x=pd.to_datetime(df['time']), y=df[value_of_input_component],
     title="Gruppe 3 Fahrdaten", 
@@ -412,7 +414,6 @@ def graph_update(value_of_input_component):
 )
 
 def joystick_values(angle, force, switch, max_Speed):
-    car = CamCar()
     """Steuerung über Joystick
         berechnet anhand der Joystick-Werte den Lenkeinschlag
         und mit der eingestellten Maximalgeschwindigkeit
@@ -458,6 +459,5 @@ def joystick_values(angle, force, switch, max_Speed):
     return debug
 
 
-
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, host=get_ip_address())
