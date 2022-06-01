@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from sklearn.model_selection import train_test_split
+
 
 def detect_color_in_frame(car, frame):
     frame_in_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -125,5 +125,9 @@ def add_lane_lines_to_frame(frame, lane_lines, line_color=(0, 255, 0), line_widt
     line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
     return line_image
 
-def train_cnn(folder):
-    pass
+def frame_process_cnn(frame):
+    height, _, _ = frame.shape
+    frame = frame[int(height*0.3):int(height*0.8),:,:]  # remove top and botom of the image, as it is not relavant for lane following
+    frame = cv2.resize(frame, (200,75)) # input image size (200,75) in model
+    frame = frame / 255 # normalizing
+    return frame

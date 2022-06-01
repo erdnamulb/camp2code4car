@@ -5,6 +5,8 @@ import loggingc2c as log
 import cv2
 from frame_editing import *
 from datetime import datetime
+import time
+from tensorflow import keras
 
 take_image = False
 
@@ -454,10 +456,11 @@ class CamCar(SensorCar):
         cv2.destroyAllWindows()
 
     def test_cnn(self):
-        cnn_path = fr"weltbeherrschungscode/Stefan/angle.h5" 
-        load_cnn(cnn_path)
+        cnn_path = fr"weltbeherrschungscode/Stefan/angle_310.h5" 
+        model = keras.models.load_model(cnn_path)
    
         # Schleife für Video Capturing
+        time_start = time.time()
         while True:
             # Abfrage eines Frames
             frame, ret = self.get_frame(True)
@@ -466,14 +469,19 @@ class CamCar(SensorCar):
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
             # Bildmanipulation ----------
-            frame_total = frame_process_cnn(frame)
-
+            frame_processed = frame_process_cnn(frame)
+            frame_np = np.asarray([frame_processed])
             #Lenkwinkel berechnen
-            """angle = self.compute_steering_angle(frame, lane_lines)
-            self.steering_angle = angle"""
-
+            angle_predict = int(model.predict(frame_np)[0])
+            print(f"predicted angle = {angle_predict:3d}°, duration = {(time.time()-time_start)*1000:.0f}ms")
+            time_start = time.time()
+            
+            #angle = self.compute_steering_angle(frame, lane_lines)
+            self.steering_angle = angle_predict
+            
+            frame_total =  frame
             height, width, _ = frame_total.shape
-            frame_total = cv2.resize(frame_total,(int(width*2*self.zoom_factor), int(height*2*self.zoom_factor)), interpolation = cv2.INTER_CUBIC)
+            frame_total = cv2.resize(frame_total,(int(width*self.zoom_factor), int(height*self.zoom_factor)), interpolation = cv2.INTER_CUBIC)
 
             # ---------------------------
             # Display des Frames
@@ -493,7 +501,7 @@ class CamCar(SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = CamCar()
-    #car.drive(30 ,1)
+    #car.drive(25 ,1)
     car.testCam()
     #car.test_cnn()
     car.stop()
