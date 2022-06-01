@@ -80,9 +80,6 @@ def take_an_image(camera_class, image_id, run_id, frame):
         "images/", f"{run_id}_{image_id}_{int(car.steering_angle):03d}.jpeg", frame)
 
 
-
-
-
 def get_ip_address():
     """Ermittlung der IP-Adresse im Netzwerk
     Returns:
@@ -93,17 +90,6 @@ def get_ip_address():
     socket_ip = s.getsockname()[0]
     s.close()
     return socket_ip
-
-'''
-@server.route('/video_feed')
-def video_feed():
-    """Will return the video feed from the camera
-    Returns:
-        Response: Response object with the video feed
-    """
-    return Response(car.generate_camera_image(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-'''
 
 @server.route('/video_feed')
 def video_feed():
