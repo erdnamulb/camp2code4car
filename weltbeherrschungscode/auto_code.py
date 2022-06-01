@@ -246,6 +246,19 @@ class CamCar(SensorCar):
         frame = cv2.flip(frame, -1)
         return frame, ret if return_ret_value else frame
     
+    def get_frame_dash(self):
+        """Returns current frame recorded by the camera
+
+        Returns:
+            numpy array: returns current frame as numpy array
+        """
+        if self.skip_frame:
+            for i in range(int(self.skip_frame)):
+                _, frame = self.VideoCapture.read()
+        _, frame = self.VideoCapture.read()
+        frame = cv2.flip(frame, -1)
+        return frame
+    
     def show_frame(self):
         """Plots the current frame
         """
