@@ -26,5 +26,7 @@
       "point_4": [100, 80],
       "hough_min_threshold": 5,
       "max_angle_change_1": 2,
-      "max_angle_change_2": 5            
+      "max_angle_change_2": 5,         
+      "zoom_factor":2,
+      "pic_folder":"weltbeherrschungscode/Allan/Bilder/"          
 }
