@@ -260,6 +260,18 @@ class CamCar(SensorCar):
         _, frame = self.VideoCapture.read()
         frame = cv2.flip(frame, -1)
         return frame
+
+    def get_jpeg(self, frame=None):
+        """Returns the current frame as .jpeg/raw bytes file
+        Args:
+            frame (list): frame which should be saved.
+        Returns:
+            bytes: returns the frame as raw bytes
+        """
+        if frame is None:
+            frame = self.get_frame()
+        _,x = cv2.imencode('.jpeg', frame)
+        return x.tobytes()
     
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames
@@ -522,7 +534,7 @@ if __name__ == '__main__':
     car.drive(60 ,1)
     #car.testCam()
     time_start = time.time()
-    car.take_pictures_fast(1050)
+    car.take_pictures_fast(520)
     print(f"Dauer: {(time.time() - time_start):.3f}")
     #car.test_cnn()
     car.stop()
