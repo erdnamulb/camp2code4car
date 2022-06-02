@@ -261,7 +261,7 @@ class CamCar(SensorCar):
         frame = cv2.flip(frame, -1)
         return frame
 
-     def get_jpeg(self, frame=None):
+    def get_jpeg(self, frame=None):
         """Returns the current frame as .jpeg/raw bytes file
         Args:
             frame (list): frame which should be saved.
