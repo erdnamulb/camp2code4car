@@ -129,5 +129,5 @@ def frame_process_cnn(frame):
     height, _, _ = frame.shape
     frame = frame[int(height*0.3):int(height*0.8),:,:]  # remove top and botom of the image, as it is not relavant for lane following
     frame = cv2.resize(frame, (200,75)) # input image size (200,75) in model
-    frame = frame / 255 # normalizing
+    #frame = frame / 255 # normalizing
     return frame

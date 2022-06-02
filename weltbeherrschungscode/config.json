@@ -25,8 +25,8 @@
       "point_3": [100, 33],
       "point_4": [100, 80],
       "hough_min_threshold": 35,
-      "max_angle_change_1": 5,
-      "max_angle_change_2": 2,
+      "max_angle_change_1": 10,
+      "max_angle_change_2": 10,
       "zoom_factor":2,
       "pic_folder":"weltbeherrschungscode/Stefan/Bilder/"            
 }

@@ -261,25 +261,6 @@ class CamCar(SensorCar):
         frame = cv2.flip(frame, -1)
         return frame
     
-    def show_frame(self):
-        """Plots the current frame
-        """
-        plt.imshow(self.get_frame())
-    
-    def get_jpeg(self, frame=None):
-        """Returns the current frame as .jpeg/raw bytes file
-
-        Args:
-            frame (list): frame which should be saved.
-
-        Returns:
-            bytes: returns the frame as raw bytes
-        """
-        if frame is None:
-            frame = self.get_frame()
-        _,x = cv2.imencode('.jpeg', frame)
-        return x.tobytes()
-
     def get_steering_angle_from_cam(self):
          # Abfrage eines Frames
         frame, ret = self.get_frame(True)
@@ -300,7 +281,7 @@ class CamCar(SensorCar):
         #Fahrbahnbegrenzung erzeugen
         lane_lines = generate_lane_lines(frame, line_segments)
         #Lenkwinkel berechnen
-        angle = self.compute_steering_angle(frame, lane_lines)
+        angle, _ = self.compute_steering_angle(frame, lane_lines)
 
         return angle, frame, lane_lines
     
@@ -312,8 +293,8 @@ class CamCar(SensorCar):
             We assume that camera is calibrated to point to dead center
         """
         if len(lane_lines) == 0:
-            #print('No lane lines detected, do nothing')
-            return car.steering_angle
+            print('No lane lines detected, do nothing')
+            return car.steering_angle, car.steering_angle
 
         height, width, _ = frame.shape
       
@@ -328,7 +309,7 @@ class CamCar(SensorCar):
                 x_offset = x2 - int(width / 4)
             else:
                 x_offset = x2 - int( width * 3 / 4)
-            print(f"Only one lane line detected. {lane_lines[0]}") #, offset {x_offset}, m {m}")
+            #print(f"Only one lane line detected. {lane_lines[0]}") #, offset {x_offset}, m {m}")
 
         else: # two lines
             max_delta = self.max_angle_change_2
@@ -355,19 +336,14 @@ class CamCar(SensorCar):
             set_delta = 0
             steering_angle = calc_steering_angle
 
-        print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}, angle_delta {angle_delta}, set_delta {set_delta}")
-        return steering_angle
-    
-    def cnn_compute_steering_angle(self, model, frame):
-        #cuted_frame
-        #return steering_angle
-        pass
+        #print(f"calculated angle: {calc_steering_angle}, returned angle: {steering_angle}, angle_delta {angle_delta}, set_delta {set_delta}")
+        return steering_angle, calc_steering_angle
     
     def testCam(self):
         """TEXT
         """
         # Schleife für Video Capturing
-        modulo_counter = 0
+        time_d = time.time() 
         while True:
             # Abfrage eines Frames
             frame, ret = self.get_frame(True)
@@ -375,31 +351,34 @@ class CamCar(SensorCar):
             if not ret:
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
+            
             # Bildmanipulation ----------
             frame_blur=cv2.blur(frame,(5,5))
-             
+
             #Frame in HSV wandeln und auf Blau filtern 
             frame_in_color_range = detect_color_in_frame(car, frame_blur)
 
             #Kanten im Frame finden 
             frame_canny_edges = cv2.Canny(frame_in_color_range,200, 400)
-            
+
             #Bild beschneiden auf intersssanten Bildausschnitt
             frame_cuted_regions = cutout_region_of_interest(car, frame_canny_edges)
-            #cv2.imshow("Display window (press q to quit)", frame_cuted_regions)
-
+            
             #Liniensegmente mit HoughLinesP finden
             line_segments = detect_line_segments(car, frame_cuted_regions)
+            
             # Display Frame with marks
             frame_with_marks = draw_line_segments(line_segments, frame)
             #cv2.imshow("Display window (press q to quit)", frame_with_marks)"""
             
             #Fahrbahnbegrenzung erzeugen
             lane_lines = generate_lane_lines(frame, line_segments)
-
+            
             #Lenkwinkel berechnen
-            angle = self.compute_steering_angle(frame, lane_lines)
+            angle, calc_angle = self.compute_steering_angle(frame, lane_lines)
+            print(f"calc angle: {calc_angle:3d}, ret angle: {angle:3d}, delta {(abs(calc_angle - angle)):3d}")
             self.steering_angle = angle
+            
 
             #Fahrbahnbegrenzung einzeichnen
             frame_lane_lines = add_lane_lines_to_frame(frame, lane_lines)
@@ -413,18 +392,11 @@ class CamCar(SensorCar):
 
             height, width, _ = frame_total.shape
             frame_total = cv2.resize(frame_total,(int(width*self.zoom_factor), int(height*self.zoom_factor)), interpolation = cv2.INTER_CUBIC)
-
+            
             # ---------------------------
             # Display des Frames
             cv2.imshow("Display window (press q to quit)", frame_total)
-            #Bilder speichern
-            time_stamp = datetime.now()
             
-            if modulo_counter % 4 == 0: #Modulo --> jedes vierte Bild
-                cv2.imwrite(f"{self.pic_folder}{time_stamp}_{angle:03d}.png", frame)
-            modulo_counter += 1
-            
-
             # Ende bei Drücken der Taste q
             if cv2.waitKey(1) == ord('q'):
                 break
@@ -455,8 +427,54 @@ class CamCar(SensorCar):
         # Kamera-Objekt muss "released" werden, um "später" ein neues Kamera-Objekt erstellen zu können!!!
         cv2.destroyAllWindows()
 
+    def take_pictures_fast(self, num_pics):
+        """TEXT
+        """
+        # Schleife für Video Capturing
+        angle_max = 0
+        angle_min = 180
+        time_intervall = time.time() 
+        count = 0
+        while count < num_pics:
+            # Abfrage eines Frames
+            frame, ret = self.get_frame(True)
+            # Wenn ret == TRUE, so war Abfrage erfolgreich
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+            # Bildmanipulation ----------
+            frame_edit=cv2.blur(frame,(5,5))
+            #Frame in HSV wandeln und auf Blau filtern 
+            frame_edit = detect_color_in_frame(car, frame_edit)
+            #Kanten im Frame finden 
+            frame_edit = cv2.Canny(frame_edit,200, 400)
+            #Bild beschneiden auf intersssanten Bildausschnitt
+            frame_edit = cutout_region_of_interest(car, frame_edit)
+            #Liniensegmente mit HoughLinesP finden
+            line_segments = detect_line_segments(car, frame_edit)
+            #Fahrbahnbegrenzung erzeugen
+            lane_lines = generate_lane_lines(frame, line_segments)
+        
+            #Lenkwinkel berechnen
+            angle, calc_angle = self.compute_steering_angle(frame, lane_lines)
+            #Lenkwinkel setzen
+            self.steering_angle = angle        
+
+            #Bilder speichern
+            time_stamp = datetime.now()      
+            cv2.imwrite(f"{self.pic_folder}{time_stamp}_{angle:03d}.png", frame)
+            
+            #Loging
+            angle_max = max(angle_max, angle)
+            angle_min = min(angle_min, angle)
+            count += 1
+            print(f"{count:5d} calc angle: {calc_angle:3d}, ret angle: {angle:3d}, delta {(abs(calc_angle - angle)):3d}, min: {angle_min:3d}, max: {angle_max:3d}, calc time {(time.time() - time_intervall)*1000:5.2f}")
+            time_intervall = time.time() 
+            
+
+
     def test_cnn(self):
-        cnn_path = fr"weltbeherrschungscode/Stefan/angle_310.h5" 
+        cnn_path = fr"weltbeherrschungscode/Stefan/angle4_700.h5" 
         model = keras.models.load_model(cnn_path)
    
         # Schleife für Video Capturing
@@ -501,8 +519,11 @@ class CamCar(SensorCar):
 if __name__ == '__main__':
     # car anlegen
     car = CamCar()
-    #car.drive(25 ,1)
-    car.testCam()
+    car.drive(60 ,1)
+    #car.testCam()
+    time_start = time.time()
+    car.take_pictures_fast(1050)
+    print(f"Dauer: {(time.time() - time_start):.3f}")
     #car.test_cnn()
     car.stop()
     #car.test_cuted_frame()
